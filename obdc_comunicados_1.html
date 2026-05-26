@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OBDC — Comunicados & Ciência</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f5f0;--surface:#fff;--border:#e0e0d8;--border2:#c8c8be;
+  --text:#1a1a18;--text2:#555550;--text3:#888880;
+  --teal:#2aaa8a;--teal-light:#e6f7f2;--teal-dark:#1a8a6a;
+  --amber:#d4851a;--amber-light:#fdf3e3;
+  --red:#c0392b;--red-light:#fdf0ee;
+  --blue:#1a6bbf;--blue-light:#e8f2fc;
+  --green:#2d8a4e;--green-light:#eaf5ee;
+  --radius:10px;--radius-sm:6px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.topbar-logo{display:flex;align-items:center;gap:12px}
+.topbar-logo img{height:32px;object-fit:contain}
+.topbar-divider{width:1px;height:28px;background:var(--border);margin:0 4px}
+.topbar-title{font-size:14px;font-weight:600;color:#1a3a32}
+.topbar-subtitle{font-size:11px;color:var(--text3)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);display:inline-block;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.app{max-width:860px;margin:0 auto;padding:20px 16px}
+.tabs{display:flex;gap:4px;margin-bottom:18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:4px}
+.tab{flex:1;padding:8px 12px;font-size:13px;border:none;border-radius:7px;background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;font-weight:500}
+.tab.active{background:var(--teal);color:#fff}
+.tab:hover:not(.active){background:var(--teal-light);color:var(--teal-dark)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card-title{font-size:14px;font-weight:600;line-height:1.4}
+.card-meta{font-size:12px;color:var(--text3);display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
+.card-body{font-size:13px;color:var(--text2);line-height:1.65;margin:10px 0;white-space:pre-wrap}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
+.badge-green{background:var(--green-light);color:var(--green)}
+.badge-amber{background:var(--amber-light);color:var(--amber)}
+.badge-blue{background:var(--blue-light);color:var(--blue)}
+.badge-gray{background:#f0f0ea;color:var(--text2)}
+.tag{display:inline-flex;align-items:center;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
+.tag-fiscal{background:#eeecfe;color:#4a3fb5}
+.tag-urgente{background:#feece8;color:#b53a1f}
+.tag-obrigatorio{background:var(--red-light);color:var(--red)}
+.tag-treinamento{background:var(--green-light);color:var(--green)}
+.tag-informativo{background:var(--blue-light);color:var(--blue)}
+.progress-bg{height:6px;background:#eee;border-radius:4px;overflow:hidden;margin:5px 0}
+.progress-fill{height:100%;border-radius:4px;background:var(--teal);transition:width .4s}
+.btn{padding:8px 14px;font-size:13px;font-weight:600;border:1px solid var(--border2);border-radius:var(--radius-sm);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s;background:var(--surface);color:var(--text)}
+.btn:hover{background:#f5f5f0}
+.btn:active{transform:scale(.98)}
+.btn-teal{background:var(--teal);color:#fff;border-color:var(--teal)}
+.btn-teal:hover{background:var(--teal-dark)}
+.btn-green{background:var(--green-light);color:var(--green);border-color:#b8dcbf}
+.btn-green:hover{background:#d5ead9}
+.btn-red{background:var(--red-light);color:var(--red);border-color:#e5b8b3}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-lg{padding:11px 20px;font-size:14px;width:100%;justify-content:center}
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;display:block}
+input[type=text],input[type=date],select,textarea{width:100%;font-size:13px;background:var(--surface);color:var(--text);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 12px;font-family:inherit;transition:border .15s}
+textarea{resize:vertical;min-height:90px;line-height:1.5}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(42,170,138,.12)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border);border-radius:20px;font-size:12px;background:#fafaf6;margin:3px;cursor:pointer;transition:all .15s;user-select:none}
+.chip.sel{background:var(--teal-light);color:var(--teal-dark);border-color:var(--teal);font-weight:600}
+.av{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.tag-selector{display:flex;flex-wrap:wrap;gap:6px}
+.tag-opt{padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--border2);background:#fafaf6;transition:all .15s;font-weight:500}
+.tag-opt.sel{font-weight:700;border-color:var(--teal);background:var(--teal-light);color:var(--teal-dark)}
+.alert{padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.alert-warn{background:var(--amber-light);color:var(--amber);border:1px solid #f5d9a0}
+.alert-ok{background:var(--green-light);color:var(--green);border:1px solid #b8dcbf}
+.alert-info{background:var(--blue-light);color:var(--blue);border:1px solid #b3d2f0}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:500;padding:16px}
+.modal{background:var(--surface);border-radius:var(--radius);padding:22px;width:100%;max-width:580px;max-height:88vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.modal-title{font-size:16px;font-weight:700;color:#1a3a32}
+.close-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:22px;line-height:1;padding:2px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.stat-label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.stat-value{font-size:24px;font-weight:700}
+.sec-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.divider{height:1px;background:var(--border);margin:14px 0}
+.login-wrap{min-height:calc(100vh - 56px);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;width:100%;max-width:380px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.login-logo{height:52px;margin-bottom:20px}
+.login-title{font-size:18px;font-weight:700;color:#1a3a32;margin-bottom:6px}
+.login-sub{font-size:13px;color:var(--text2);margin-bottom:24px}
+.panel{display:none}.panel.active{display:block}
+.ci-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.ci-item:last-child{border-bottom:none}
+.ci-ok{width:22px;height:22px;border-radius:50%;background:var(--green-light);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.ci-pend{width:22px;height:22px;border-radius:50%;background:#f0f0ea;color:var(--text3);display:flex;align-items:center;justify-content:center;font-size:11px;border:1px solid var(--border2);flex-shrink:0}
+.toast{position:fixed;bottom:20px;right:20px;padding:12px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;z-index:9999;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.18)}
+.toast.show{opacity:1;transform:none}
+.toast-ok{background:#1a5a3a;color:#b8e8cc}
+.toast-err{background:#6a1a1a;color:#f0c0c0}
+.toast-info{background:#1a3a6a;color:#b0d0f0}
+.share-box{background:var(--teal-light);border:1px solid var(--teal);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.share-url{flex:1;font-size:12px;color:var(--teal-dark);font-family:monospace;word-break:break-all;font-weight:600}
+.empty{padding:36px 20px;text-align:center;color:var(--text3);font-size:13px}
+.empty i{font-size:36px;display:block;margin-bottom:10px;color:var(--border2)}
+.admin-badge{background:var(--teal);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px}
+.search-wrap{position:relative;margin-bottom:12px}
+.search-wrap i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px;pointer-events:none}
+.search-wrap input{padding-left:34px}
+.sync-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--teal-dark);background:var(--teal-light);padding:3px 8px;border-radius:20px;border:1px solid var(--teal)}
+@media(max-width:480px){.form-row{grid-template-columns:1fr}.tabs{gap:2px}.tab{font-size:12px;padding:7px 6px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">
+    <img src="data:image/jpeg;base64,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" alt="OBDC">
+    <div class="topbar-divider"></div>
+    <div>
+      <div class="topbar-title">Comunicados & Ciência</div>
+      <div class="topbar-subtitle">Controle de leitura em tempo real</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="live-dot"></span>
+    <span style="font-size:11px;color:var(--text3)" id="user-info">carregando...</span>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-wrap" class="login-wrap" style="display:none">
+  <div class="login-card">
+    <img class="login-logo" src="data:image/jpeg;base64,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" alt="OBDC">
+    <h2 class="login-title">Bem-vindo(a) à OBDC!</h2>
+    <p class="login-sub">Selecione seu nome para acessar os comunicados</p>
+    <div class="form-group" style="text-align:left">
+      <label class="form-label" for="login-sel">Seu nome</label>
+      <select id="login-sel"><option value="">— Selecione —</option></select>
+    </div>
+    <button class="btn btn-teal btn-lg" onclick="doLogin()" style="margin-top:8px"><i class="ti ti-login"></i> Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="main-app" style="display:none">
+  <div class="app">
+    <div class="tabs" id="tabs-wrap">
+      <button class="tab active" onclick="switchTab('comunicados')" id="tab-comunicados"><i class="ti ti-speakerphone"></i> Comunicados</button>
+      <button class="tab" onclick="switchTab('relatorio')" id="tab-relatorio" style="display:none"><i class="ti ti-chart-bar"></i> Relatório</button>
+      <button class="tab" onclick="doLogout()" style="flex:0;padding:8px 12px"><i class="ti ti-logout"></i> Sair</button>
+    </div>
+
+    <div id="panel-comunicados" class="panel active">
+      <div id="stats-area"></div>
+      <div id="admin-controls" style="display:none;margin-bottom:14px">
+        <div class="share-box">
+          <i class="ti ti-link" style="color:var(--teal-dark);font-size:18px;flex-shrink:0"></i>
+          <div style="flex:1">
+            <div style="font-size:11px;font-weight:700;color:var(--teal-dark);margin-bottom:2px">Link para compartilhar com o time</div>
+            <div class="share-url">https://larissapacheco96-collab.github.io/Comunicados/obdc_comunicados.html</div>
+          </div>
+          <button class="btn btn-sm" onclick="copyLink()"><i class="ti ti-copy"></i> Copiar</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+          <div class="sec-title" style="margin-bottom:0"><i class="ti ti-file-text"></i> Comunicados publicados</div>
+          <button class="btn btn-teal" onclick="openModal()"><i class="ti ti-plus"></i> Novo comunicado</button>
+        </div>
+      </div>
+      <div id="colab-header" style="display:none;margin-bottom:12px">
+        <div class="alert alert-info"><i class="ti ti-info-circle"></i> Leia cada comunicado e clique em <strong>Confirmar leitura</strong> para registrar sua ciência.</div>
+      </div>
+      <div id="lista-comunicados"></div>
+    </div>
+
+    <div id="panel-relatorio" class="panel">
+      <div class="stats-grid" id="stats-rel"></div>
+      <div class="search-wrap"><i class="ti ti-search"></i><input type="text" id="rel-search" placeholder="Buscar colaborador..." oninput="renderRelatorio()"></div>
+      <div id="rel-lista"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" style="display:none">
+  <div class="overlay" onclick="closeModal(event)">
+    <div class="modal" id="modal-inner"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+// ── FIREBASE CONFIG ──────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyCU4sTnPV-R9Ew6lA-2j2v0xfi-WG7njis",
+  authDomain: "comunicados-5d04b.firebaseapp.com",
+  databaseURL: "https://comunicados-5d04b-default-rtdb.firebaseio.com",
+  projectId: "comunicados-5d04b",
+  storageBucket: "comunicados-5d04b.firebasestorage.app",
+  messagingSenderId: "632392533533",
+  appId: "1:632392533533:web:59975b1915b6b90aaba8f4",
+  measurementId: "G-0RL9CTTLPS"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const ref = db.ref('comunicados');
+
+// ── TEAM ─────────────────────────────────────────────────────────
+const ADMINS = ['larissap','leilane','geovana'];
+const TEAM = [
+  {id:'luciana',    nome:'Luciana'},
+  {id:'fernanda',   nome:'Fernanda'},
+  {id:'gabmachado', nome:'Gabriela Machado'},
+  {id:'gabcardoso', nome:'Gabriella Cardoso'},
+  {id:'kelle',      nome:'Kelle'},
+  {id:'jesdriely',  nome:'Jessica Driely'},
+  {id:'jescardoso', nome:'Jessica Cardoso'},
+  {id:'marialuiza', nome:'Maria Luiza'},
+  {id:'estela',     nome:'Estela'},
+  {id:'analaura',   nome:'Ana Laura'},
+  {id:'gabryel',    nome:'Gabryel'},
+  {id:'gaspar',     nome:'Gaspar'},
+  {id:'jeferson',   nome:'Jeferson'},
+  {id:'leilane',    nome:'Leilane'},
+  {id:'geovana',    nome:'Geovana'},
+  {id:'larissap',   nome:'Larissa Pacheco'},
+  {id:'larissab',   nome:'Larissa Bernardes'},
+  {id:'bianca',     nome:'Bianca'},
+  {id:'lara',       nome:'Lara'},
+  {id:'guilherme',  nome:'Guilherme'},
+  {id:'sara',       nome:'Sara'},
+  {id:'lauryanna',  nome:'Lauryanna'},
+  {id:'lauanny',    nome:'Lauanny'},
+  {id:'rafael',     nome:'Rafael'},
+  {id:'thalita',    nome:'Thalita'},
+  {id:'felipeneves',nome:'Felipe Neves'},
+  {id:'douglas',    nome:'Douglas'},
+];
+const BG=['#E6F1FB','#E1F5EE','#EEEDFE','#FAEEDA','#FBEAF0','#EAF3DE','#FAECE7','#F1EFE8'];
+const FG=['#185FA5','#0F6E56','#3C3489','#854F0B','#993556','#3B6D11','#993C1D','#5F5E5A'];
+TEAM.forEach((m,i)=>{
+  const x=i%BG.length;
+  m.avStyle=`background:${BG[x]};color:${FG[x]}`;
+  const p=m.nome.trim().split(' ');
+  m.av=p.length>=2?p[0][0]+p[p.length-1][0]:m.nome.slice(0,2).toUpperCase();
+});
+
+// ── STATE ─────────────────────────────────────────────────────────
+let comunicados = {};
+let currentUser = null;
+let isAdmin = false;
+let selectedTag = '';
+let selectedDests = new Set(TEAM.map(c=>c.id));
+
+// ── FIREBASE LISTENER (tempo real) ───────────────────────────────
+ref.on('value', snap => {
+  comunicados = snap.val() || {};
+  if (currentUser) { renderComunicados(); if(isAdmin) renderStats(); }
+});
+
+// ── HELPERS ───────────────────────────────────────────────────────
+function tagCls(t){return{Urgente:'tag-urgente',Informativo:'tag-informativo',Obrigatório:'tag-obrigatorio',Treinamento:'tag-treinamento',Fiscal:'tag-fiscal'}[t]||'tag-informativo';}
+function fmtD(iso){if(!iso)return'—';return new Date(iso+'T12:00:00').toLocaleDateString('pt-BR');}
+function fmtDT(iso){if(!iso)return'—';const d=new Date(iso);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+function lista(){return Object.values(comunicados).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));}
+function pct(c){const t=Object.keys(c.dests||{}).length;return t?Math.round(Object.keys(c.ciencias||{}).length/t*100):0;}
+
+// ── LOGIN ─────────────────────────────────────────────────────────
+function buildLoginSelect(){
+  const sel=document.getElementById('login-sel');
+  TEAM.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.nome+(ADMINS.includes(c.id)?' ★':'');sel.appendChild(o);});
+}
+function doLogin(){
+  const uid=document.getElementById('login-sel').value;
+  if(!uid){toast('Selecione seu nome','err');return;}
+  currentUser=TEAM.find(t=>t.id===uid);
+  isAdmin=ADMINS.includes(uid);
+  sessionStorage.setItem('obdc_user',uid);
+  showApp();
+}
+function doLogout(){
+  sessionStorage.removeItem('obdc_user');
+  currentUser=null;isAdmin=false;
+  document.getElementById('main-app').style.display='none';
+  document.getElementById('login-wrap').style.display='flex';
+}
+function showApp(){
+  document.getElementById('login-wrap').style.display='none';
+  document.getElementById('main-app').style.display='block';
+  document.getElementById('user-info').innerHTML=`${currentUser.nome} ${isAdmin?'<span class="admin-badge">ADMIN</span>':''}`;
+  document.getElementById('admin-controls').style.display=isAdmin?'block':'none';
+  document.getElementById('colab-header').style.display=isAdmin?'none':'block';
+  document.getElementById('tab-relatorio').style.display=isAdmin?'flex':'none';
+  renderComunicados();
+  if(isAdmin) renderStats();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────
+function renderStats(){
+  const all=lista();
+  const pend=all.filter(c=>Object.keys(c.ciencias||{}).length<Object.keys(c.dests||{}).length).length;
+  const done=all.filter(c=>{const d=Object.keys(c.dests||{}).length;return d&&Object.keys(c.ciencias||{}).length>=d;}).length;
+  document.getElementById('stats-area').innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Publicados</div><div class="stat-value">${all.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Com pendência</div><div class="stat-value" style="color:var(--amber)">${pend}</div></div>
+      <div class="stat-card"><div class="stat-label">100% concluídos</div><div class="stat-value" style="color:var(--green)">${done}</div></div>
+      <div class="stat-card"><div class="stat-label">Colaboradores</div><div class="stat-value">${TEAM.length}</div></div>
+    </div>`;
+}
+
+function renderComunicados(){
+  const el=document.getElementById('lista-comunicados');
+  const uid=currentUser?.id;
+  const all=lista();
+  const view=isAdmin?all:all.filter(c=>c.dests&&c.dests[uid]);
+  if(!view.length){
+    el.innerHTML='<div class="empty"><i class="ti ti-speakerphone"></i>'+(isAdmin?'Nenhum comunicado. Clique em <strong>Novo comunicado</strong>.':'Você não tem comunicados no momento.')+'</div>';
+    return;
+  }
+  let html='';
+  if(!isAdmin){
+    const pend=view.filter(c=>!(c.ciencias&&c.ciencias[uid])).length;
+    html+=pend>0
+      ?`<div class="alert alert-warn"><i class="ti ti-alert-circle"></i>Você tem <strong>${pend}</strong> comunicado${pend>1?'s':''} aguardando ciência.</div>`
+      :`<div class="alert alert-ok"><i class="ti ti-circle-check"></i>Você está em dia! Todas as ciências foram confirmadas.</div>`;
+  }
+  view.forEach(c=>{
+    const ok=c.ciencias&&c.ciencias[uid];
+    const p=pct(c);
+    const destIds=Object.keys(c.dests||{});
+    const faltam=destIds.filter(d=>!(c.ciencias&&c.ciencias[d])).map(d=>TEAM.find(t=>t.id===d)?.nome).filter(Boolean);
+    html+=`<div class="card" style="${!isAdmin&&!ok?'border-left:3px solid var(--amber)':''}">
+      <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        ${c.tag?`<span class="tag ${tagCls(c.tag)}">${c.tag}</span>`:''}
+        <span class="card-title" style="flex:1">${c.titulo}</span>
+        ${!isAdmin?(ok?'<span class="badge badge-green"><i class="ti ti-check" style="font-size:11px"></i> Ciência dada</span>':'<span class="badge badge-amber"><i class="ti ti-clock" style="font-size:11px"></i> Pendente</span>'):''}
+      </div>
+      <div class="card-meta" style="margin-bottom:10px">
+        <i class="ti ti-calendar" style="font-size:12px"></i>${fmtDT(c.createdAt)}
+        ${c.prazo?`· Prazo: <strong>${fmtD(c.prazo)}</strong>`:''}
+        ${isAdmin?`<span class="badge badge-gray">${Object.keys(c.ciencias||{}).length}/${destIds.length} ciências</span>`:''}
+      </div>
+      <div class="card-body">${c.corpo}</div>
+      ${isAdmin?`
+        <div style="display:flex;align-items:center;gap:12px;padding-top:12px;border-top:1px solid var(--border)">
+          <div style="flex:1">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px"><span>Ciências recebidas</span><span>${p}%</span></div>
+            <div class="progress-bg"><div class="progress-fill" style="width:${p}%"></div></div>
+            ${faltam.length?`<div style="font-size:11px;color:var(--amber);margin-top:4px"><i class="ti ti-clock"></i> Aguardando (${faltam.length}): ${faltam.slice(0,5).join(', ')}${faltam.length>5?' e mais '+(faltam.length-5)+'…':''}</div>`:`<div style="font-size:11px;color:var(--green);margin-top:4px"><i class="ti ti-check"></i> Todos confirmaram</div>`}
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button class="btn btn-sm" onclick="verDetalhes('${c.id}')"><i class="ti ti-list"></i> Detalhes</button>
+            <button class="btn btn-red btn-sm" onclick="excluir('${c.id}')"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>`
+      :ok?`<div style="font-size:12px;color:var(--green);padding-top:10px;border-top:1px solid var(--border)"><i class="ti ti-check-circle"></i> Ciência registrada em ${fmtDT(ok.quando)}</div>`
+        :`<div style="padding-top:10px;border-top:1px solid var(--border)">
+            <button class="btn btn-green" onclick="darCiencia('${c.id}')"><i class="ti ti-check"></i> Confirmar leitura e entendimento</button>
+          </div>`
+      }
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+function renderRelatorio(){
+  const q=(document.getElementById('rel-search')?.value||'').toLowerCase();
+  const all=lista();
+  if(!all.length){
+    document.getElementById('stats-rel').innerHTML='';
+    document.getElementById('rel-lista').innerHTML='<div class="empty"><i class="ti ti-chart-bar"></i>Nenhum dado ainda.</div>';
+    return;
+  }
+  let total=0,dadas=0;
+  all.forEach(c=>{total+=Object.keys(c.dests||{}).length;dadas+=Object.keys(c.ciencias||{}).length;});
+  const geral=total?Math.round(dadas/total*100):0;
+  document.getElementById('stats-rel').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Ciências esperadas</div><div class="stat-value">${total}</div></div>
+    <div class="stat-card"><div class="stat-label">Recebidas</div><div class="stat-value" style="color:var(--green)">${dadas}</div></div>
+    <div class="stat-card"><div class="stat-label">Pendentes</div><div class="stat-value" style="color:var(--amber)">${total-dadas}</div></div>
+    <div class="stat-card"><div class="stat-label">Conformidade</div><div class="stat-value">${geral}%</div></div>`;
+  const stats=TEAM.filter(c=>!q||c.nome.toLowerCase().includes(q)).map(c=>{
+    const meus=all.filter(cm=>cm.dests&&cm.dests[c.id]);
+    const deu=meus.filter(cm=>cm.ciencias&&cm.ciencias[c.id]).length;
+    const p=meus.length?Math.round(deu/meus.length*100):0;
+    return{...c,total:meus.length,deu,p};
+  }).sort((a,b)=>a.p-b.p);
+  document.getElementById('rel-lista').innerHTML=`
+    <div class="sec-title"><i class="ti ti-users"></i> Situação por colaborador</div>
+    ${stats.map(c=>`<div class="card" style="padding:12px 16px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="av" style="${c.avStyle}">${c.av}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600">${c.nome}${ADMINS.includes(c.id)?' <span class="admin-badge">ADMIN</span>':''}</div>
+          <div class="progress-bg" style="margin-top:5px"><div class="progress-fill" style="width:${c.p}%;background:${c.p===100?'var(--teal)':c.p>50?'var(--amber)':'var(--red)'}"></div></div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;min-width:52px">
+          <div style="font-size:13px;font-weight:700">${c.deu}/${c.total}</div>
+          <div style="font-size:11px;color:var(--text3)">${c.p}%</div>
+        </div>
+        ${c.p===100?'<span class="badge badge-green"><i class="ti ti-check" style="font-size:11px"></i></span>':'<span class="badge badge-amber">'+( c.total-c.deu)+' pend.</span>'}
+      </div>
+    </div>`).join('')}`;
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────
+function buildChips(){
+  let h='';
+  TEAM.forEach(c=>{h+=`<span class="chip${selectedDests.has(c.id)?' sel':''}" onclick="toggleChip(this,'${c.id}')"><span class="av" style="${c.avStyle};width:18px;height:18px;font-size:8px">${c.av}</span>${c.nome}</span>`;});
+  const cc=document.getElementById('chip-container');
+  if(cc) cc.innerHTML=h;
+}
+function toggleChip(el,id){if(selectedDests.has(id))selectedDests.delete(id);else selectedDests.add(id);el.classList.toggle('sel',selectedDests.has(id));}
+function selAll(){selectedDests=new Set(TEAM.map(c=>c.id));buildChips();}
+function selNone(){selectedDests.clear();buildChips();}
+function selTag(el){
+  document.querySelectorAll('.tag-opt').forEach(t=>t.classList.remove('sel'));
+  selectedTag=selectedTag===el.dataset.tag?'':el.dataset.tag;
+  if(selectedTag)el.classList.add('sel');
+}
+
+function openModal(){
+  selectedTag='';selectedDests=new Set(TEAM.map(c=>c.id));
+  document.getElementById('modal-inner').innerHTML=`
+    <div class="modal-header">
+      <span class="modal-title">Novo comunicado</span>
+      <button class="close-btn" onclick="closeModal(null,true)">&times;</button>
+    </div>
+    <div class="form-group"><label class="form-label">Título *</label><input type="text" id="f-titulo" placeholder="Ex: Orientação PIS/COFINS — LC 224/2025"></div>
+    <div class="form-group"><label class="form-label">Conteúdo *</label><textarea id="f-corpo" rows="5" placeholder="Escreva o comunicado aqui..."></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Categoria</label>
+        <div class="tag-selector">
+          <span class="tag-opt" data-tag="Fiscal" onclick="selTag(this)">Fiscal</span>
+          <span class="tag-opt" data-tag="Urgente" onclick="selTag(this)">Urgente</span>
+          <span class="tag-opt" data-tag="Obrigatório" onclick="selTag(this)">Obrigatório</span>
+          <span class="tag-opt" data-tag="Treinamento" onclick="selTag(this)">Treinamento</span>
+          <span class="tag-opt" data-tag="Informativo" onclick="selTag(this)">Informativo</span>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Prazo para ciência</label><input type="date" id="f-prazo"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Destinatários</label>
+      <div style="display:flex;gap:6px;margin-bottom:8px"><button class="btn btn-sm" onclick="selAll()"><i class="ti ti-users"></i> Todos</button><button class="btn btn-sm" onclick="selNone()">Limpar</button></div>
+      <div id="chip-container" style="display:flex;flex-wrap:wrap"></div>
+    </div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button class="btn" onclick="closeModal(null,true)">Cancelar</button>
+      <button class="btn btn-teal" onclick="publicar()"><i class="ti ti-send"></i> Publicar</button>
+    </div>`;
+  buildChips();
+  document.getElementById('modal').style.display='block';
+  setTimeout(()=>document.getElementById('f-titulo')?.focus(),60);
+}
+function closeModal(e,force){if(force||(e&&e.target.classList.contains('overlay')))document.getElementById('modal').style.display='none';}
+
+// ── AÇÕES ────────────────────────────────────────────────────────
+async function publicar(){
+  const titulo=(document.getElementById('f-titulo')?.value||'').trim();
+  const corpo=(document.getElementById('f-corpo')?.value||'').trim();
+  if(!titulo||!corpo){toast('Preencha título e conteúdo','err');return;}
+  if(!selectedDests.size){toast('Selecione ao menos um destinatário','err');return;}
+  const id='c'+Date.now();
+  const destsObj={};selectedDests.forEach(d=>{destsObj[d]=true;});
+  await ref.child(id).set({id,titulo,corpo,tag:selectedTag,prazo:document.getElementById('f-prazo')?.value||'',dests:destsObj,ciencias:{},createdAt:new Date().toISOString()});
+  closeModal(null,true);
+  toast('Comunicado publicado! O time já pode ver.','ok');
+}
+
+async function darCiencia(cid){
+  await ref.child(`${cid}/ciencias/${currentUser.id}`).set({id:currentUser.id,quando:new Date().toISOString()});
+  toast('Ciência registrada!','ok');
+}
+
+async function excluir(cid){
+  if(!confirm('Excluir este comunicado permanentemente?'))return;
+  await ref.child(cid).remove();
+  toast('Comunicado removido','ok');
+}
+
+function verDetalhes(cid){
+  const c=comunicados[cid];if(!c)return;
+  const destIds=Object.keys(c.dests||{});
+  const items=destIds.map(d=>{
+    const col=TEAM.find(t=>t.id===d);
+    const ci=c.ciencias&&c.ciencias[d];
+    return`<div class="ci-item">
+      <div class="${ci?'ci-ok':'ci-pend'}">${ci?'✓':'○'}</div>
+      <div class="av" style="${col?.avStyle||''};width:24px;height:24px;font-size:9px">${col?.av||'?'}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:500">${col?.nome||d}</div></div>
+      <div style="font-size:11px;color:var(--text3);flex-shrink:0">${ci?fmtDT(ci.quando):'<span style="color:var(--amber)">pendente</span>'}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('modal-inner').innerHTML=`
+    <div class="modal-header">
+      <span class="modal-title">${c.titulo}</span>
+      <button class="close-btn" onclick="closeModal(null,true)">&times;</button>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px">${Object.keys(c.ciencias||{}).length} de ${destIds.length} ciências · ${pct(c)}% concluído</div>
+    <div>${items}</div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:flex-end"><button class="btn" onclick="closeModal(null,true)">Fechar</button></div>`;
+  document.getElementById('modal').style.display='block';
+}
+
+function switchTab(t){
+  ['comunicados','relatorio'].forEach(x=>{
+    document.getElementById('panel-'+x).classList.toggle('active',x===t);
+    document.getElementById('tab-'+x).classList.toggle('active',x===t);
+  });
+  if(t==='relatorio')renderRelatorio();
+}
+
+function copyLink(){
+  const url='https://larissapacheco96-collab.github.io/Comunicados/obdc_comunicados.html';
+  navigator.clipboard.writeText(url).then(()=>toast('Link copiado!','ok')).catch(()=>{document.execCommand&&document.execCommand('copy');toast('Link copiado!','ok');});
+}
+
+function toast(msg,type){
+  const el=document.getElementById('toast');
+  el.className='toast toast-'+(type==='ok'?'ok':type==='info'?'info':'err')+' show';
+  el.innerHTML=`<i class="ti ti-${type==='ok'?'check':type==='info'?'info-circle':'alert-circle'}"></i>${msg}`;
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ── INIT ─────────────────────────────────────────────────────────
+buildLoginSelect();
+const saved=sessionStorage.getItem('obdc_user');
+if(saved){const u=TEAM.find(t=>t.id===saved);if(u){currentUser=u;isAdmin=ADMINS.includes(u.id);showApp();}else{document.getElementById('login-wrap').style.display='flex';}}
+else{document.getElementById('login-wrap').style.display='flex';}
+</script>
+</body>
+</html>
