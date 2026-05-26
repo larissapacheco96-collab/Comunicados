@@ -57,6 +57,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .btn-red{background:var(--red-light);color:var(--red);border-color:#e5b8b3}
 .btn-sm{padding:5px 10px;font-size:12px}
 .btn-lg{padding:11px 20px;font-size:14px;width:100%;justify-content:center}
+.btn:disabled{opacity:.5;cursor:not-allowed}
 .form-group{margin-bottom:14px}
 .form-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;display:block}
 input[type=text],input[type=date],select,textarea{width:100%;font-size:13px;background:var(--surface);color:var(--text);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 12px;font-family:inherit;transition:border .15s}
@@ -107,28 +108,33 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);bo
 .search-wrap{position:relative;margin-bottom:12px}
 .search-wrap i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px;pointer-events:none}
 .search-wrap input{padding-left:34px}
-/* ANEXOS */
-.anexo-upload-area{border:2px dashed var(--border2);border-radius:var(--radius-sm);padding:16px;text-align:center;cursor:pointer;transition:all .2s;background:#fafaf6}
-.anexo-upload-area:hover,.anexo-upload-area.drag{border-color:var(--teal);background:var(--teal-light)}
-.anexo-upload-area i{font-size:28px;color:var(--text3);display:block;margin-bottom:6px}
-.anexo-upload-area p{font-size:12px;color:var(--text3)}
-.anexo-lista{margin-top:10px;display:flex;flex-direction:column;gap:6px}
-.anexo-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px}
-.anexo-item .nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
-.anexo-item .tam{color:var(--text3);flex-shrink:0;font-size:11px}
-.anexo-icon{font-size:18px;flex-shrink:0}
-.anexo-icon.pdf{color:#e74c3c}
-.anexo-icon.doc{color:#2980b9}
-.anexo-icon.img{color:#27ae60}
-.anexo-icon.other{color:var(--text3)}
-.upload-progress{height:4px;background:var(--border);border-radius:2px;margin-top:4px;overflow:hidden}
-.upload-progress-fill{height:100%;background:var(--teal);border-radius:2px;transition:width .3s}
+/* UPLOAD */
+.upload-area{border:2px dashed var(--border2);border-radius:var(--radius-sm);padding:18px;text-align:center;cursor:pointer;transition:all .2s;background:#fafaf6}
+.upload-area:hover,.upload-area.drag{border-color:var(--teal);background:var(--teal-light)}
+.upload-area i{font-size:30px;color:var(--text3);display:block;margin-bottom:6px}
+.upload-area p{font-size:12px;color:var(--text3)}
+.file-lista{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.file-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px}
+.file-item .fn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.file-item .fsz{color:var(--text3);flex-shrink:0;font-size:11px}
+.file-icon{font-size:18px;flex-shrink:0}
+.fi-pdf{color:#e74c3c}.fi-doc{color:#2980b9}.fi-xls{color:#27ae60}.fi-img{color:#8e44ad}.fi-other{color:var(--text3)}
+.prog-wrap{margin-top:6px}
+.prog-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--teal);border-radius:3px;transition:width .3s}
+.prog-label{font-size:11px;color:var(--text3);margin-top:3px}
+/* ANEXOS no card */
+.anexos-wrap{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.anexos-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.anexo-dl{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--blue-light);border:1px solid #b3d2f0;border-radius:var(--radius-sm);font-size:13px;margin-bottom:6px}
+.anexo-dl i{color:var(--blue);font-size:16px;flex-shrink:0}
+.anexo-dl span{flex:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.anexo-dl a{flex-shrink:0}
 input[type=file]{display:none}
 @media(max-width:480px){.form-row{grid-template-columns:1fr}.tabs{gap:2px}.tab{font-size:12px;padding:7px 6px}}
 </style>
 </head>
 <body>
-
 <div class="topbar">
   <div class="topbar-logo">
     <img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAA1AI4DASIAAhEBAxEB/8QAHAAAAgEFAQAAAAAAAAAAAAAABwgAAgMEBQYB/8QAQhAAAQMDAgQEBAIFCAsAAAAAAQIDBAAFEQYSByExURNBcYEIFCJhMqEVUmKR0RYjM3OUscHwNUJGVFZjcpKTsuH/xAAbAQACAwEBAQAAAAAAAAAAAAAAAwIEBQYBB//EADQRAAEDAwMBBgMGBwAAAAAAAAECAxEABAUSITEGE0FRYXGBFeHwFFKRocHRFiMyU6Kx8f/aAAwDAQACEQMRAD8AZ7ifrm3aHsolSE/MTX8pixQrBcV3PZI8zSx6q4gat1JKW7PvEhtpR+mPHWW2kDtgdfU5rK4zahe1FxCuT6nN0eK4YsYDoEIOCfc5PvWZwk4bTNcvvSXpCoVqjq2OPJTla14ztSP7z5ZrWZaQy3rXzXzfJ5C7yl2ba2nSDAA2mO81xUC4XCA6XYM6VFcJyVMuqQSfY0X+FPGefFms2nV8gyobighE5Q/nGSem/H4k/fqPvW91FwAtSratVgustuahOUplELbcPY4AKc9+dACfEkwZr8GYypmQw4pt1tQ5pUDgimAtXIIqopvI4NxKjsD5yD5H69KLXxH368xOIDUeBeJseMIDa0oYkKQnJUrJ5HnnAoaHU2ox/tDdv7Y5/GrV6u8u7/ImYsuORIiIqVk5KkJKinPoDj2orfCo027qG9h1tCwIjeNyQcfWaCAy1JExUUrXlMjpQspCz+G00OLfrbV8FYXF1NdEkHOFSVLHuFZFEaPxZu194b6gtlwf+XvLEZDkeXHPhqdR4iAoYHRWD5dQT0qj4oYViiX61qtzcdm4ONLMtDKQMpyNilAef4vahXaosiRHuLrIVsjxC48QOQTvQMH1JFASh1AXEV649d465ctg4VCCDvtuPyIq/wDyl1J/xBdv7Y5/Gq2tVanacDjeo7slQ6H5xf8AGtXFQHZTLSs7VuJScdiQKZGVwC0m5HUmPcbqy6R9K1OJWB7bRmpOuNtRqHNJx9je34UWFf0+cc/8oc6K41aos0hDV5d/TMEq+sO4DyR+yodfQ5pkdN3q3ahsse72p8PRX05SehSfNJHkR5ilB4haRuOi9QKtU9SXUqT4kd9Iwl1GcZx5HyIrccNuIEvSNhv9ubWo/OR90Ps2/wAk7vt9JJ9UikP2yXE6m62MVnLixeNvekkCeeQR+9EjjJxgets1/T2lFoElolEmcQFBtXmlsdCR5k9PKgTdLrc7q8XrncZc1wnO591S+fv0rFQlx55KEBbrrisADmpSifzJNH7SHASAq1tv6muEr5xxIUpiKoJS19skHJpn8q2SJqgTkM88op4HdMAeHv8AnQh0vrfVGm5Lbtru8kNoIzHdWVtKHYpP+GKaDhXriHriwqmNtfLzY5DctjOQhRHIg+aT5UMJ/wAP7/8AKNlEK8j9Cq5urcH8+3+yAOSs9+XpRo0ppy0aXtKLZZoiWGU81HqtxX6yj5mqt04ytIKea6Lp6yyVq6pLxhA7iZ38vr5Zk+42+3loTp0aL4ytrfjOhG89hnrWUCCAQQQeYIpZPicvqblrdm0NOBbNsZ2qAOR4q8FXuBtFbn4XX75Lul0bVcZSrZHjJSGlrKkJcUoYwD0OEq6Us2sNdpNXUZ8LyBswiRMTPgN9qCs4vKmyDIGHi6ouf9WTn86az4ekxE8KbWYpyVKdL39ZvOf8KXvi9YXdPcQbpEW3sZeeMmOfJTayTy9Dke1brg3xNXokvW64R3ZVpfX4hDZ+tlfQqSDyIPLI+1XbhBeaGn1rk8LcoxmRUm425TPhv8qaqlH49JZTxXvPgYwS2VY/W8NOaLeouPOmY9uWbJHlzpqknw0uNeG2k91E8/YUul1nyrpcpNynOl2TJcU66s+aiaTZMrQoqUIrS6oyltcMpZZVqMzI4Gx/esasy0puynF/okTi5j6/ld+cffb5VLnbpNuRDVKQUGXGTJbSRz2KKgk++3PvRa+FR1prUV7LrqGwYjeNygM/WauOuaEFQ3rmcfZm4u0MKOme/wANpoQT2JzMg/pBmS2+v6j8wlQUr7/VzNd1py/aba4R6ksKYQiXt9ttZkLXu+aSl1B2j9XAydvqaI/xRXCyPaWgxEyIz10EsKaCFBS0N7TuzjoDy9aXaoNnt0AkRVq8aOKulNoUFyCJj7wj2NX4H+kI39cj/wBhT1jpSJRFpblsOKOEodSo+gINNFL436DZYUtqVNkrA5NtxlAqPbJwKRetqWU6RNbHSl4xbJd7ZYTMcn1rlPi0Sz4Onl4T4298Z89uEflmgJXU8TdaTNb6iNyfaEeO0nworAOfDRnPM+aj51kcPtCztWWe/T4yVYt8bcx/zXuuz/tB9yKe0OxaAXWPkl/E8gtVuJnjzgfKrPCBEdfE7T6ZQBb+cBAPTcASn88U41IjHeejSG5DC1NPNLC0KHIpUDkH2NMTo3jvZJFvba1Ow/CmoAC3WWytpw9xjmn0pF6ytZCk71s9LZO3tkLZeVpJMgnj0oy1z3ELVMLSGmJN3lKSXEp2x2Sebrh/Ckf3n7ZriL/x30lDjLNqZmXKRg7Ehvw0Z+6lc8egNAfXesbzrK6/PXZ0BCMhiO3kNsg+QHfuTzNV2bRajKhArZyvUlvbtFNurUs8RwPOa0tymSLhPkXCY4XJEhxTrqu6lHJprOA+ml6b0BG+YQUzJ5+afBHNO4Dan2SB7k0BeEWl2bvekXa7NKNnguBS07c/MODmGx9vM/b1po7LfIVz3Ia3NOIGShfLl3FIyGVtUPiz1jXzFVOk8O+UKyC0mDsD/s/p+Nc9xZ0BD1xZ0pCkR7pGBMWQR+9Cv2T+XWld1PpbUGmpio15tciOQfpc2lTax3SociKdiqXEIcTscQlaT5KGRTWLpTQjkVo5Xp5jIK7QHSvx8fUUiTTbjqwhptbiz0SlJJPsKLHCrg9dbxNYueporkG1IIWI7g2uyPtjqlPcnmfKmRaiRGl724rCFd0tgGr1McvlKEJEVRsukmWXAt5euO6IHvuaWP4lLfITxCZ+WgvfLi3NIb8NolIAUsYGBjlQyEKeOkOWPRpX8KekgHqAa82p7D91Dd6UJCY4ovOlU3L63u1jUZiPnSNx7VdZLwaj2yc86rolDC1E/lXZt8LNQxtF3XUl4hvRPlmUqjRcZecUVpBKkj8IAJOOtNkAB0ArxakoTuWoJT3J5V6q/UeBUWekGETrcJMGNo9/OKRf5Gd/uMr/AMKv4V6i33BaglECWpROAAwok/lTwuSYjYBcfZTlewZUB9Xb1qovxkyAwXWg8U7gjcN2O+Kl8QP3aR/Bif73+PzpUtE8JdWaikNqkQnLTBJG9+UnarH7KOpP7hTOaR09bdL2GPZ7W1sYZHNR/E4o9VqPmTWwhSWZcdL7CtyFEgH0NeiRHJdAfbJZ/pPqH0efPtVV64W7zxXQYvC2+Oko3Ue8/W1AvjJwflSJ8jUOk2Q6XlFyTATgHceqm++fNP7u1AyZFlQn1MTIz0Z1JwpDrZSQfQ085kRw6Gi+2HCneE7hnb39KsSkWyStTUlER5QRvUlwJVhPc58qc1eqQIUJrMyHSrNy4XGlaCeREj9IpHY7L0hwNx2XXlk4CW0FRPsKJ/Dzgzf76+3KvzblotvUhYw+6OwT/q+p/caZOIi1s+EIqIbXiA+H4aUjcB2xV8SY5dDQfb8Qp3hO4ZKe/pUnL5REJEUqz6RZbWFPr1eUQPfc1w+prFFsltt8W1REx7fHQW0oQOSTnOT9z3rBsECXPkOCIpSNiPqWOnUcv89qIzTsaWyS040+2TtO0hQ9KqZaaZRsabQ2nslIArhL3pZF3kDdrcOk7kd8xHNfRLfJ/Z7YMITxsPCPSq6lSpXWVlVKlSpRRUqVKlFFSrM5hMmG6wo7QtBGR5HyPtUqUUVpJVvKIUXDyVLdbUw4pbeclwgqWBnkrIrKTHUxdFsJWlTb7W4laMrBCNnJWftnp371KlFFeaVWpMBuIQkhhsJChnJ6jzJ7Vjqt65RuUT5ktMvupQoITnAJyrrnqOR8vtUqUUVkxreUNJQ4/wCKtERcfeUDJGcAn2FWFwCZslCXghLkLYsBP4jt2gnn5Y8sVKlFFXXYwjz7chCipKWltfUST0HPrz969FrQ40hhTuMwDH3BPPnjn/8AKlSiiqrElYUt9Zby8cFKEbUjZyGBn/PLtW2qVKKK/9k=" alt="OBDC — Você Satisfeito">
@@ -199,7 +205,7 @@ input[type=file]{display:none}
   </div>
 </div>
 <div id="toast" class="toast"></div>
-<input type="file" id="file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.txt" onchange="handleFiles(this.files)">
+<input type="file" id="file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.txt,.zip" onchange="handleFiles(this.files)">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -216,37 +222,24 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const storage = firebase.storage();
+const stor = firebase.storage();
 const ref = db.ref('comunicados');
 
 const ADMINS = ['larissap','leilane','geovana'];
 const TEAM = [
-  {id:'luciana',nome:'Luciana'},
-  {id:'fernanda',nome:'Fernanda'},
-  {id:'gabmachado',nome:'Gabriela Machado'},
-  {id:'gabcardoso',nome:'Gabriella Cardoso'},
-  {id:'kelle',nome:'Kelle'},
-  {id:'jesdriely',nome:'Jessica Driely'},
-  {id:'jescardoso',nome:'Jessica Cardoso'},
-  {id:'marialuiza',nome:'Maria Luiza'},
-  {id:'estela',nome:'Estela'},
-  {id:'analaura',nome:'Ana Laura'},
-  {id:'gabryel',nome:'Gabryel'},
-  {id:'gaspar',nome:'Gaspar'},
-  {id:'jeferson',nome:'Jeferson'},
-  {id:'leilane',nome:'Leilane'},
-  {id:'geovana',nome:'Geovana'},
-  {id:'larissap',nome:'Larissa Pacheco'},
-  {id:'larissab',nome:'Larissa Bernardes'},
-  {id:'bianca',nome:'Bianca'},
-  {id:'lara',nome:'Lara'},
-  {id:'guilherme',nome:'Guilherme'},
-  {id:'sara',nome:'Sara'},
-  {id:'lauryanna',nome:'Lauryanna'},
-  {id:'lauanny',nome:'Lauanny'},
-  {id:'rafael',nome:'Rafael'},
-  {id:'thalita',nome:'Thalita'},
-  {id:'felipeneves',nome:'Felipe Neves'},
+  {id:'luciana',nome:'Luciana'},{id:'fernanda',nome:'Fernanda'},
+  {id:'gabmachado',nome:'Gabriela Machado'},{id:'gabcardoso',nome:'Gabriella Cardoso'},
+  {id:'kelle',nome:'Kelle'},{id:'jesdriely',nome:'Jessica Driely'},
+  {id:'jescardoso',nome:'Jessica Cardoso'},{id:'marialuiza',nome:'Maria Luiza'},
+  {id:'estela',nome:'Estela'},{id:'analaura',nome:'Ana Laura'},
+  {id:'gabryel',nome:'Gabryel'},{id:'gaspar',nome:'Gaspar'},
+  {id:'jeferson',nome:'Jeferson'},{id:'leilane',nome:'Leilane'},
+  {id:'geovana',nome:'Geovana'},{id:'larissap',nome:'Larissa Pacheco'},
+  {id:'larissab',nome:'Larissa Bernardes'},{id:'bianca',nome:'Bianca'},
+  {id:'lara',nome:'Lara'},{id:'guilherme',nome:'Guilherme'},
+  {id:'sara',nome:'Sara'},{id:'lauryanna',nome:'Lauryanna'},
+  {id:'lauanny',nome:'Lauanny'},{id:'rafael',nome:'Rafael'},
+  {id:'thalita',nome:'Thalita'},{id:'felipeneves',nome:'Felipe Neves'},
   {id:'douglas',nome:'Douglas'},
 ];
 const BG=['#E6F1FB','#E1F5EE','#EEEDFE','#FAEEDA','#FBEAF0','#EAF3DE','#FAECE7','#F1EFE8'];
@@ -262,22 +255,46 @@ let pendingFiles=[];
 
 ref.on('value',snap=>{comunicados=snap.val()||{};if(currentUser){renderComunicados();if(isAdmin)renderStats();}});
 
-function tagCls(t){return{Urgente:'tag-urgente',Informativo:'tag-informativo',Obrigatório:'tag-obrigatorio',Treinamento:'tag-treinamento',Fiscal:'tag-fiscal'}[t]||'tag-informativo';}
+function tagCls(t){return{Urgente:'tag-urgente',Informativo:'tag-informativo','Obrigatório':'tag-obrigatorio',Treinamento:'tag-treinamento',Fiscal:'tag-fiscal'}[t]||'tag-informativo';}
 function fmtD(iso){if(!iso)return'—';return new Date(iso+'T12:00:00').toLocaleDateString('pt-BR');}
 function fmtDT(iso){if(!iso)return'—';const d=new Date(iso);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
 function lista(){return Object.values(comunicados).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));}
 function pct(c){const t=Object.keys(c.dests||{}).length;return t?Math.round(Object.keys(c.ciencias||{}).length/t*100):0;}
 function fmtBytes(b){if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1)+'KB';return(b/1048576).toFixed(1)+'MB';}
-function iconAnexo(nome){const ext=nome.split('.').pop().toLowerCase();if(['pdf'].includes(ext))return'<i class="ti ti-file-type-pdf anexo-icon pdf"></i>';if(['doc','docx'].includes(ext))return'<i class="ti ti-file-type-doc anexo-icon doc"></i>';if(['xls','xlsx'].includes(ext))return'<i class="ti ti-file-spreadsheet anexo-icon doc"></i>';if(['png','jpg','jpeg','gif'].includes(ext))return'<i class="ti ti-photo anexo-icon img"></i>';return'<i class="ti ti-file anexo-icon other"></i>';}
+function fileIcon(n){const e=n.split('.').pop().toLowerCase();if(e==='pdf')return'<i class="ti ti-file-type-pdf file-icon fi-pdf"></i>';if(['doc','docx'].includes(e))return'<i class="ti ti-file-type-doc file-icon fi-doc"></i>';if(['xls','xlsx'].includes(e))return'<i class="ti ti-file-spreadsheet file-icon fi-xls"></i>';if(['png','jpg','jpeg','gif'].includes(e))return'<i class="ti ti-photo file-icon fi-img"></i>';return'<i class="ti ti-file file-icon fi-other"></i>';}
 
 function buildLoginSelect(){const sel=document.getElementById('login-sel');TEAM.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.nome+(ADMINS.includes(c.id)?' ★':'');sel.appendChild(o);});}
 function doLogin(){const uid=document.getElementById('login-sel').value;if(!uid){toast('Selecione seu nome','err');return;}currentUser=TEAM.find(t=>t.id===uid);isAdmin=ADMINS.includes(uid);sessionStorage.setItem('obdc_user',uid);showApp();}
 function doLogout(){sessionStorage.removeItem('obdc_user');currentUser=null;isAdmin=false;document.getElementById('main-app').style.display='none';document.getElementById('login-wrap').style.display='flex';}
-function showApp(){document.getElementById('login-wrap').style.display='none';document.getElementById('main-app').style.display='block';document.getElementById('user-info').innerHTML=`${currentUser.nome} ${isAdmin?'<span class="admin-badge">ADMIN</span>':''}`;document.getElementById('admin-controls').style.display=isAdmin?'block':'none';document.getElementById('colab-header').style.display=isAdmin?'none':'block';document.getElementById('tab-relatorio').style.display=isAdmin?'flex':'none';renderComunicados();if(isAdmin)renderStats();}
+function showApp(){
+  document.getElementById('login-wrap').style.display='none';
+  document.getElementById('main-app').style.display='block';
+  document.getElementById('user-info').innerHTML=`${currentUser.nome} ${isAdmin?'<span class="admin-badge">ADMIN</span>':''}`;
+  document.getElementById('admin-controls').style.display=isAdmin?'block':'none';
+  document.getElementById('colab-header').style.display=isAdmin?'none':'block';
+  document.getElementById('tab-relatorio').style.display=isAdmin?'flex':'none';
+  renderComunicados();if(isAdmin)renderStats();
+}
 
-function renderStats(){const all=lista();const pend=all.filter(c=>Object.keys(c.ciencias||{}).length<Object.keys(c.dests||{}).length).length;const done=all.filter(c=>{const d=Object.keys(c.dests||{}).length;return d&&Object.keys(c.ciencias||{}).length>=d;}).length;document.getElementById('stats-area').innerHTML=`<div class="stats-grid"><div class="stat-card"><div class="stat-label">Publicados</div><div class="stat-value">${all.length}</div></div><div class="stat-card"><div class="stat-label">Com pendência</div><div class="stat-value" style="color:var(--amber)">${pend}</div></div><div class="stat-card"><div class="stat-label">100% concluídos</div><div class="stat-value" style="color:var(--green)">${done}</div></div><div class="stat-card"><div class="stat-label">Colaboradores</div><div class="stat-value">${TEAM.length}</div></div></div>`;}
+function renderStats(){
+  const all=lista();
+  const pend=all.filter(c=>Object.keys(c.ciencias||{}).length<Object.keys(c.dests||{}).length).length;
+  const done=all.filter(c=>{const d=Object.keys(c.dests||{}).length;return d&&Object.keys(c.ciencias||{}).length>=d;}).length;
+  document.getElementById('stats-area').innerHTML=`<div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Publicados</div><div class="stat-value">${all.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Com pendência</div><div class="stat-value" style="color:var(--amber)">${pend}</div></div>
+    <div class="stat-card"><div class="stat-label">100% concluídos</div><div class="stat-value" style="color:var(--green)">${done}</div></div>
+    <div class="stat-card"><div class="stat-label">Colaboradores</div><div class="stat-value">${TEAM.length}</div></div>
+  </div>`;
+}
 
-function renderAnexos(anexos){if(!anexos||!anexos.length)return'';return`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px"><i class="ti ti-paperclip"></i> Anexos (${anexos.length})</div><div class="anexo-lista">${anexos.map(a=>`<div class="anexo-item">${iconAnexo(a.nome)}<span class="nome" title="${a.nome}">${a.nome}</span><span class="tam">${fmtBytes(a.tamanho)}</span><a href="${a.url}" target="_blank" class="btn btn-sm" style="padding:3px 8px;font-size:11px"><i class="ti ti-download"></i> Baixar</a></div>`).join('')}</div></div>`;}
+function renderAnexos(anexos){
+  if(!anexos||!anexos.length)return'';
+  return`<div class="anexos-wrap">
+    <div class="anexos-title"><i class="ti ti-paperclip"></i> Documentos (${anexos.length})</div>
+    ${anexos.map(a=>`<div class="anexo-dl">${fileIcon(a.nome)}<span title="${a.nome}">${a.nome}</span><span style="font-size:11px;color:var(--text3);flex-shrink:0">${fmtBytes(a.tamanho)}</span><a href="${a.url}" target="_blank" rel="noopener" class="btn btn-sm btn-teal" style="padding:4px 10px;font-size:11px"><i class="ti ti-download"></i> Baixar</a></div>`).join('')}
+  </div>`;
+}
 
 function renderComunicados(){
   const el=document.getElementById('lista-comunicados');
@@ -286,13 +303,15 @@ function renderComunicados(){
   const view=isAdmin?all:all.filter(c=>c.dests&&c.dests[uid]);
   if(!view.length){el.innerHTML='<div class="empty"><i class="ti ti-speakerphone"></i>'+(isAdmin?'Nenhum comunicado. Clique em <strong>Novo comunicado</strong>.':'Você não tem comunicados no momento.')+'</div>';return;}
   let html='';
-  if(!isAdmin){const pend=view.filter(c=>!(c.ciencias&&c.ciencias[uid])).length;html+=pend>0?`<div class="alert alert-warn"><i class="ti ti-alert-circle"></i>Você tem <strong>${pend}</strong> comunicado${pend>1?'s':''} aguardando ciência.</div>`:`<div class="alert alert-ok"><i class="ti ti-circle-check"></i>Você está em dia! Todas as ciências foram confirmadas.</div>`;}
+  if(!isAdmin){
+    const pend=view.filter(c=>!(c.ciencias&&c.ciencias[uid])).length;
+    html+=pend>0?`<div class="alert alert-warn"><i class="ti ti-alert-circle"></i>Você tem <strong>${pend}</strong> comunicado${pend>1?'s':''} aguardando ciência.</div>`:`<div class="alert alert-ok"><i class="ti ti-circle-check"></i>Você está em dia! Todas as ciências foram confirmadas.</div>`;
+  }
   view.forEach(c=>{
     const ok=c.ciencias&&c.ciencias[uid];
     const p=pct(c);
     const destIds=Object.keys(c.dests||{});
     const faltam=destIds.filter(d=>!(c.ciencias&&c.ciencias[d])).map(d=>TEAM.find(t=>t.id===d)?.nome).filter(Boolean);
-    const anexosHtml=renderAnexos(c.anexos||[]);
     html+=`<div class="card" style="${!isAdmin&&!ok?'border-left:3px solid var(--amber)':''}">
       <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;flex-wrap:wrap">
         ${c.tag?`<span class="tag ${tagCls(c.tag)}">${c.tag}</span>`:''}
@@ -303,10 +322,10 @@ function renderComunicados(){
         <i class="ti ti-calendar" style="font-size:12px"></i>${fmtDT(c.createdAt)}
         ${c.prazo?`· Prazo: <strong>${fmtD(c.prazo)}</strong>`:''}
         ${isAdmin?`<span class="badge badge-gray">${Object.keys(c.ciencias||{}).length}/${destIds.length} ciências</span>`:''}
-        ${(c.anexos&&c.anexos.length)?`<span class="badge badge-gray"><i class="ti ti-paperclip" style="font-size:11px"></i> ${c.anexos.length} anexo${c.anexos.length>1?'s':''}</span>`:''}
+        ${(c.anexos&&c.anexos.length)?`<span class="badge badge-gray"><i class="ti ti-paperclip" style="font-size:11px"></i> ${c.anexos.length} doc${c.anexos.length>1?'s':''}</span>`:''}
       </div>
       <div class="card-body">${c.corpo}</div>
-      ${anexosHtml}
+      ${renderAnexos(c.anexos||[])}
       ${isAdmin?`
         <div style="display:flex;align-items:center;gap:12px;padding-top:12px;border-top:1px solid var(--border);margin-top:10px">
           <div style="flex:1">
@@ -336,45 +355,82 @@ function renderRelatorio(){
   let total=0,dadas=0;
   all.forEach(c=>{total+=Object.keys(c.dests||{}).length;dadas+=Object.keys(c.ciencias||{}).length;});
   const geral=total?Math.round(dadas/total*100):0;
-  document.getElementById('stats-rel').innerHTML=`<div class="stat-card"><div class="stat-label">Ciências esperadas</div><div class="stat-value">${total}</div></div><div class="stat-card"><div class="stat-label">Recebidas</div><div class="stat-value" style="color:var(--green)">${dadas}</div></div><div class="stat-card"><div class="stat-label">Pendentes</div><div class="stat-value" style="color:var(--amber)">${total-dadas}</div></div><div class="stat-card"><div class="stat-label">Conformidade</div><div class="stat-value">${geral}%</div></div>`;
-  const stats=TEAM.filter(c=>!q||c.nome.toLowerCase().includes(q)).map(c=>{const meus=all.filter(cm=>cm.dests&&cm.dests[c.id]);const deu=meus.filter(cm=>cm.ciencias&&cm.ciencias[c.id]).length;const p=meus.length?Math.round(deu/meus.length*100):0;return{...c,total:meus.length,deu,p};}).sort((a,b)=>a.p-b.p);
-  document.getElementById('rel-lista').innerHTML=`<div class="sec-title"><i class="ti ti-users"></i> Situação por colaborador</div>${stats.map(c=>`<div class="card" style="padding:12px 16px;margin-bottom:8px"><div style="display:flex;align-items:center;gap:10px"><div class="av" style="${c.avStyle}">${c.av}</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">${c.nome}${ADMINS.includes(c.id)?' <span class="admin-badge">ADMIN</span>':''}</div><div class="progress-bg" style="margin-top:5px"><div class="progress-fill" style="width:${c.p}%;background:${c.p===100?'var(--teal)':c.p>50?'var(--amber)':'var(--red)'}"></div></div></div><div style="text-align:right;flex-shrink:0;min-width:52px"><div style="font-size:13px;font-weight:700">${c.deu}/${c.total}</div><div style="font-size:11px;color:var(--text3)">${c.p}%</div></div>${c.p===100?'<span class="badge badge-green"><i class="ti ti-check" style="font-size:11px"></i></span>':'<span class="badge badge-amber">'+( c.total-c.deu)+' pend.</span>'}</div></div>`).join('')}`;
+  document.getElementById('stats-rel').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Ciências esperadas</div><div class="stat-value">${total}</div></div>
+    <div class="stat-card"><div class="stat-label">Recebidas</div><div class="stat-value" style="color:var(--green)">${dadas}</div></div>
+    <div class="stat-card"><div class="stat-label">Pendentes</div><div class="stat-value" style="color:var(--amber)">${total-dadas}</div></div>
+    <div class="stat-card"><div class="stat-label">Conformidade</div><div class="stat-value">${geral}%</div></div>`;
+  const stats=TEAM.filter(c=>!q||c.nome.toLowerCase().includes(q)).map(c=>{
+    const meus=all.filter(cm=>cm.dests&&cm.dests[c.id]);
+    const deu=meus.filter(cm=>cm.ciencias&&cm.ciencias[c.id]).length;
+    const p=meus.length?Math.round(deu/meus.length*100):0;
+    return{...c,total:meus.length,deu,p};
+  }).sort((a,b)=>a.p-b.p);
+  document.getElementById('rel-lista').innerHTML=`<div class="sec-title"><i class="ti ti-users"></i> Situação por colaborador</div>
+    ${stats.map(c=>`<div class="card" style="padding:12px 16px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="av" style="${c.avStyle}">${c.av}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600">${c.nome}${ADMINS.includes(c.id)?' <span class="admin-badge">ADMIN</span>':''}</div>
+          <div class="progress-bg" style="margin-top:5px"><div class="progress-fill" style="width:${c.p}%;background:${c.p===100?'var(--teal)':c.p>50?'var(--amber)':'var(--red)'}"></div></div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;min-width:52px">
+          <div style="font-size:13px;font-weight:700">${c.deu}/${c.total}</div>
+          <div style="font-size:11px;color:var(--text3)">${c.p}%</div>
+        </div>
+        ${c.p===100?'<span class="badge badge-green"><i class="ti ti-check" style="font-size:11px"></i></span>':'<span class="badge badge-amber">'+( c.total-c.deu)+' pend.</span>'}
+      </div>
+    </div>`).join('')}`;
 }
 
-// ── ANEXOS ────────────────────────────────────────────────────────
+// ── UPLOAD DE ARQUIVOS ────────────────────────────────────────────
 function handleFiles(files){
   Array.from(files).forEach(f=>{
-    if(f.size>10*1024*1024){toast(`${f.name} é maior que 10MB`,'err');return;}
+    if(f.size>15*1024*1024){toast(`${f.name}: máx 15MB`,'err');return;}
     if(!pendingFiles.find(p=>p.name===f.name&&p.size===f.size)) pendingFiles.push(f);
   });
-  renderPendingFiles();
+  renderPending();
+  document.getElementById('file-input').value='';
 }
 
-function renderPendingFiles(){
+function renderPending(){
   const el=document.getElementById('pending-files');
   if(!el)return;
   if(!pendingFiles.length){el.innerHTML='';return;}
-  el.innerHTML=pendingFiles.map((f,i)=>`<div class="anexo-item">${iconAnexo(f.name)}<span class="nome">${f.name}</span><span class="tam">${fmtBytes(f.size)}</span><button class="btn btn-sm btn-red" onclick="removePending(${i})"><i class="ti ti-x"></i></button></div>`).join('');
+  el.innerHTML=`<div class="file-lista">${pendingFiles.map((f,i)=>`<div class="file-item">${fileIcon(f.name)}<span class="fn">${f.name}</span><span class="fsz">${fmtBytes(f.size)}</span><button class="btn btn-red btn-sm" onclick="removePending(${i})"><i class="ti ti-x"></i></button></div>`).join('')}</div>`;
 }
 
-function removePending(i){pendingFiles.splice(i,1);renderPendingFiles();}
+function removePending(i){pendingFiles.splice(i,1);renderPending();}
 
-async function uploadAnexos(cid){
+async function uploadAll(cid){
   const results=[];
-  for(const f of pendingFiles){
+  for(let i=0;i<pendingFiles.length;i++){
+    const f=pendingFiles[i];
+    const pEl=document.getElementById('prog-fill');
+    const lEl=document.getElementById('prog-label');
+    if(lEl)lEl.textContent=`Enviando ${i+1}/${pendingFiles.length}: ${f.name}`;
     const path=`anexos/${cid}/${Date.now()}_${f.name}`;
-    const storRef=storage.ref(path);
-    const el=document.getElementById('upload-prog');
-    if(el)el.style.display='block';
-    await storRef.put(f);
-    const url=await storRef.getDownloadURL();
+    const sRef=stor.ref(path);
+    const task=sRef.put(f);
+    await new Promise((res,rej)=>{
+      task.on('state_changed',
+        snap=>{const p=Math.round(snap.bytesTransferred/snap.totalBytes*100);if(pEl)pEl.style.width=p+'%';},
+        rej, res
+      );
+    });
+    const url=await sRef.getDownloadURL();
     results.push({nome:f.name,tamanho:f.size,url,path});
   }
   return results;
 }
 
 // ── MODAL ─────────────────────────────────────────────────────────
-function buildChips(){let h='';TEAM.forEach(c=>{h+=`<span class="chip${selectedDests.has(c.id)?' sel':''}" onclick="toggleChip(this,'${c.id}')"><span class="av" style="${c.avStyle};width:18px;height:18px;font-size:8px">${c.av}</span>${c.nome}</span>`;});const cc=document.getElementById('chip-container');if(cc)cc.innerHTML=h;}
+function buildChips(){
+  let h='';
+  TEAM.forEach(c=>{h+=`<span class="chip${selectedDests.has(c.id)?' sel':''}" onclick="toggleChip(this,'${c.id}')"><span class="av" style="${c.avStyle};width:18px;height:18px;font-size:8px">${c.av}</span>${c.nome}</span>`;});
+  const cc=document.getElementById('chip-container');
+  if(cc)cc.innerHTML=h;
+}
 function toggleChip(el,id){if(selectedDests.has(id))selectedDests.delete(id);else selectedDests.add(id);el.classList.toggle('sel',selectedDests.has(id));}
 function selAll(){selectedDests=new Set(TEAM.map(c=>c.id));buildChips();}
 function selNone(){selectedDests.clear();buildChips();}
@@ -402,26 +458,32 @@ function openModal(){
       <div class="form-group"><label class="form-label">Prazo para ciência</label><input type="date" id="f-prazo"></div>
     </div>
     <div class="form-group">
-      <label class="form-label"><i class="ti ti-paperclip"></i> Anexos (opcional)</label>
-      <div class="anexo-upload-area" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="event.preventDefault();this.classList.remove('drag');handleFiles(event.dataTransfer.files)">
+      <label class="form-label"><i class="ti ti-paperclip"></i> Documentos (opcional — máx. 15MB por arquivo)</label>
+      <div class="upload-area" onclick="document.getElementById('file-input').click()"
+        ondragover="event.preventDefault();this.classList.add('drag')"
+        ondragleave="this.classList.remove('drag')"
+        ondrop="event.preventDefault();this.classList.remove('drag');handleFiles(event.dataTransfer.files)">
         <i class="ti ti-cloud-upload"></i>
-        <p><strong>Clique para anexar</strong> ou arraste aqui</p>
-        <p style="margin-top:4px">PDF, Word, Excel, imagens — máx. 10MB por arquivo</p>
+        <p><strong>Clique para selecionar</strong> ou arraste os arquivos aqui</p>
+        <p style="margin-top:4px;font-size:11px">PDF, Word, Excel, PowerPoint, imagens, ZIP</p>
       </div>
-      <div id="pending-files" class="anexo-lista" style="margin-top:8px"></div>
+      <div id="pending-files"></div>
       <div id="upload-prog" style="display:none;margin-top:8px">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Enviando arquivos...</div>
-        <div class="upload-progress"><div class="upload-progress-fill" style="width:100%;animation:pulse 1s infinite"></div></div>
+        <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+        <div class="prog-label" id="prog-label">Enviando...</div>
       </div>
     </div>
     <div class="form-group"><label class="form-label">Destinatários</label>
-      <div style="display:flex;gap:6px;margin-bottom:8px"><button class="btn btn-sm" onclick="selAll()"><i class="ti ti-users"></i> Todos</button><button class="btn btn-sm" onclick="selNone()">Limpar</button></div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button class="btn btn-sm" onclick="selAll()"><i class="ti ti-users"></i> Todos</button>
+        <button class="btn btn-sm" onclick="selNone()">Limpar</button>
+      </div>
       <div id="chip-container" style="display:flex;flex-wrap:wrap"></div>
     </div>
     <div class="divider"></div>
     <div style="display:flex;justify-content:flex-end;gap:8px">
       <button class="btn" onclick="closeModal(null,true)">Cancelar</button>
-      <button class="btn btn-teal" id="btn-publicar" onclick="publicar()"><i class="ti ti-send"></i> Publicar</button>
+      <button class="btn btn-teal" id="btn-pub" onclick="publicar()"><i class="ti ti-send"></i> Publicar</button>
     </div>`;
   buildChips();
   document.getElementById('modal').style.display='block';
@@ -435,14 +497,17 @@ async function publicar(){
   const corpo=(document.getElementById('f-corpo')?.value||'').trim();
   if(!titulo||!corpo){toast('Preencha título e conteúdo','err');return;}
   if(!selectedDests.size){toast('Selecione ao menos um destinatário','err');return;}
-  const btn=document.getElementById('btn-publicar');
+  const btn=document.getElementById('btn-pub');
   if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader"></i> Publicando...';}
   const id='c'+Date.now();
   const destsObj={};selectedDests.forEach(d=>{destsObj[d]=true;});
   let anexos=[];
   if(pendingFiles.length){
-    toast('Enviando anexos...','info');
-    try{anexos=await uploadAnexos(id);}catch(e){toast('Erro ao enviar anexos','err');if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-send"></i> Publicar';}return;}
+    const prog=document.getElementById('upload-prog');
+    if(prog)prog.style.display='block';
+    toast('Enviando documentos...','info');
+    try{anexos=await uploadAll(id);}
+    catch(e){toast('Erro ao enviar arquivos','err');if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-send"></i> Publicar';}return;}
   }
   await ref.child(id).set({id,titulo,corpo,tag:selectedTag,prazo:document.getElementById('f-prazo')?.value||'',dests:destsObj,ciencias:{},anexos,createdAt:new Date().toISOString()});
   pendingFiles=[];
@@ -450,12 +515,17 @@ async function publicar(){
   toast('Comunicado publicado! O time já pode ver.','ok');
 }
 
-async function darCiencia(cid){await ref.child(`${cid}/ciencias/${currentUser.id}`).set({id:currentUser.id,quando:new Date().toISOString()});toast('Ciência registrada!','ok');}
+async function darCiencia(cid){
+  await ref.child(`${cid}/ciencias/${currentUser.id}`).set({id:currentUser.id,quando:new Date().toISOString()});
+  toast('Ciência registrada!','ok');
+}
 
 async function excluir(cid){
-  if(!confirm('Excluir este comunicado permanentemente?'))return;
+  if(!confirm('Excluir este comunicado e todos os arquivos?'))return;
   const c=comunicados[cid];
-  if(c&&c.anexos){for(const a of c.anexos){try{await storage.ref(a.path).delete();}catch(e){}}}
+  if(c&&c.anexos&&c.anexos.length){
+    for(const a of c.anexos){try{await stor.ref(a.path).delete();}catch(e){}}
+  }
   await ref.child(cid).remove();
   toast('Comunicado removido','ok');
 }
@@ -463,8 +533,17 @@ async function excluir(cid){
 function verDetalhes(cid){
   const c=comunicados[cid];if(!c)return;
   const destIds=Object.keys(c.dests||{});
-  const items=destIds.map(d=>{const col=TEAM.find(t=>t.id===d);const ci=c.ciencias&&c.ciencias[d];return`<div class="ci-item"><div class="${ci?'ci-ok':'ci-pend'}">${ci?'✓':'○'}</div><div class="av" style="${col?.avStyle||''};width:24px;height:24px;font-size:9px">${col?.av||'?'}</div><div style="flex:1"><div style="font-size:13px;font-weight:500">${col?.nome||d}</div></div><div style="font-size:11px;color:var(--text3);flex-shrink:0">${ci?fmtDT(ci.quando):'<span style="color:var(--amber)">pendente</span>'}</div></div>`;}).join('');
-  document.getElementById('modal-inner').innerHTML=`<div class="modal-header"><span class="modal-title">${c.titulo}</span><button class="close-btn" onclick="closeModal(null,true)">&times;</button></div><div style="font-size:12px;color:var(--text3);margin-bottom:12px">${Object.keys(c.ciencias||{}).length} de ${destIds.length} ciências · ${pct(c)}% concluído</div><div>${items}</div><div class="divider"></div><div style="display:flex;justify-content:flex-end"><button class="btn" onclick="closeModal(null,true)">Fechar</button></div>`;
+  const items=destIds.map(d=>{
+    const col=TEAM.find(t=>t.id===d);
+    const ci=c.ciencias&&c.ciencias[d];
+    return`<div class="ci-item"><div class="${ci?'ci-ok':'ci-pend'}">${ci?'✓':'○'}</div><div class="av" style="${col?.avStyle||''};width:24px;height:24px;font-size:9px">${col?.av||'?'}</div><div style="flex:1"><div style="font-size:13px;font-weight:500">${col?.nome||d}</div></div><div style="font-size:11px;color:var(--text3);flex-shrink:0">${ci?fmtDT(ci.quando):'<span style="color:var(--amber)">pendente</span>'}</div></div>`;
+  }).join('');
+  document.getElementById('modal-inner').innerHTML=`
+    <div class="modal-header"><span class="modal-title">${c.titulo}</span><button class="close-btn" onclick="closeModal(null,true)">&times;</button></div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px">${Object.keys(c.ciencias||{}).length} de ${destIds.length} ciências · ${pct(c)}% concluído</div>
+    <div>${items}</div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:flex-end"><button class="btn" onclick="closeModal(null,true)">Fechar</button></div>`;
   document.getElementById('modal').style.display='block';
 }
 
