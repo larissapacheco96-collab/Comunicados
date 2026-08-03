@@ -39,6 +39,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .badge-green{background:var(--green-light);color:var(--green)}
 .badge-amber{background:var(--amber-light);color:var(--amber)}
 .badge-gray{background:#f0f0ea;color:var(--text2)}
+.badge-blue{background:var(--blue-light);color:var(--blue)}
 .tag{display:inline-flex;align-items:center;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
 .tag-fiscal{background:#eeecfe;color:#4a3fb5}
 .tag-urgente{background:#feece8;color:#b53a1f}
@@ -127,7 +128,14 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);bo
 .anexo-dl i{color:var(--blue);font-size:16px;flex-shrink:0}
 .anexo-dl span{flex:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 input[type=file]{display:none}
-@media(max-width:480px){.form-row{grid-template-columns:1fr}.tabs{gap:2px}.tab{font-size:12px;padding:7px 6px}}
+.mrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.mrow:last-child{border-bottom:none}
+.mrow .mnome{flex:1;min-width:0;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mrow.inativo{opacity:.6}
+.add-box{background:#fafaf6;border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px}
+.chk{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text2);cursor:pointer;user-select:none}
+.chk input{width:auto;accent-color:var(--teal)}
+@media(max-width:480px){.form-row{grid-template-columns:1fr}.tabs{gap:2px}.tab{font-size:12px;padding:7px 6px}.mrow{flex-wrap:wrap}}
 </style>
 </head>
 <body>
@@ -161,6 +169,7 @@ input[type=file]{display:none}
     <div class="tabs">
       <button class="tab active" onclick="switchTab('comunicados')" id="tab-comunicados"><i class="ti ti-speakerphone"></i> Comunicados</button>
       <button class="tab" onclick="switchTab('relatorio')" id="tab-relatorio" style="display:none"><i class="ti ti-chart-bar"></i> Relatório</button>
+      <button class="tab" onclick="switchTab('equipe')" id="tab-equipe" style="display:none"><i class="ti ti-users"></i> Equipe</button>
       <button class="tab" onclick="doLogout()" style="flex:0;padding:8px 12px"><i class="ti ti-logout"></i> Sair</button>
     </div>
     <div id="panel-comunicados" class="panel active">
@@ -190,6 +199,9 @@ input[type=file]{display:none}
       <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text2);margin:0 0 12px 2px;cursor:pointer;user-select:none"><input type="checkbox" id="rel-pend-only" style="width:auto;accent-color:var(--teal)" onchange="renderRelatorio()"> Mostrar somente quem não deu ciência</label>
       <div id="rel-lista"></div>
     </div>
+    <div id="panel-equipe" class="panel">
+      <div id="equipe-conteudo"></div>
+    </div>
   </div>
 </div>
 
@@ -205,7 +217,7 @@ input[type=file]{display:none}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script>
-const LOGO="data:image/png;base64,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";
+const LOGO="data:image/png;base64,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";
 document.getElementById('logo-top').src=LOGO;
 document.getElementById('logo-login').src=LOGO;
 
@@ -219,12 +231,13 @@ const firebaseConfig = {
   appId:"1:632392533533:web:59975b1915b6b90aaba8f4"
 };
 firebase.initializeApp(firebaseConfig);
-const db=firebase.database(), stor=firebase.storage(), ref=db.ref('comunicados');
+const db=firebase.database(), stor=firebase.storage(), ref=db.ref('comunicados'), eqRef=db.ref('equipe');
 
-const ADMINS=['larissap','rosangela','geovana'];
-
-// Time completo (para login)
-const TEAM=[
+/* ===================================================================
+   Equipe inicial — usada APENAS na primeira vez (semeia o Firebase).
+   Depois disso a lista viva fica em /equipe e é editada pela aba Equipe.
+   =================================================================== */
+const EQUIPE_INICIAL=[
   {id:'luciana',nome:'Luciana'},
   {id:'fernanda',nome:'Fernanda'},
   {id:'gabmachado',nome:'Gabriela Machado'},
@@ -236,9 +249,9 @@ const TEAM=[
   {id:'analaura',nome:'Ana Laura'},
   {id:'gabryel',nome:'Gabryel'},
   {id:'gaspar',nome:'Gaspar'},
-  {id:'rosangela',nome:'Rosangela'},
-  {id:'geovana',nome:'Geovana'},
-  {id:'larissap',nome:'Larissa Pacheco'},
+  {id:'rosangela',nome:'Rosangela',admin:true},
+  {id:'geovana',nome:'Geovana',admin:true},
+  {id:'larissap',nome:'Larissa Pacheco',admin:true},
   {id:'larissab',nome:'Larissa Bernardes'},
   {id:'bianca',nome:'Bianca'},
   {id:'lara',nome:'Lara'},
@@ -255,17 +268,41 @@ const TEAM=[
   {id:'wellington',nome:'Wellington Rodrigues'},
 ];
 
-// Colaboradores que recebem ciência = time SEM os admins
-const COLAB=TEAM.filter(t=>!ADMINS.includes(t.id))
-                .sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+const BG=['#E6F1FB','#E1F5EE','#EEEDFE','#FAEEDA','#FBEAF0','#EAF3DE','#FAECE7','#F1EFE8'];
+const FG=['#185FA5','#0F6E56','#3C3489','#854F0B','#993556','#3B6D11','#993C1D','#5F5E5A'];
+
+let MEMBERS=[];   // todos, inclusive inativos
+let TEAM=[];      // somente ativos
+let COLAB=[];     // ativos que não são admin (quem dá ciência)
+let ADMINS=[];    // ids dos admins
+
+let comunicados={},currentUser=null,isAdmin=false,selectedTag='',selectedDests=new Set(),pendingFiles=[];
+let editId=null,editAnexos=[],booted=false,activeTab='comunicados';
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function hashIdx(s,n){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h%n;}
+function memberOf(id){return MEMBERS.find(m=>m.id===id);}
+function nomeDe(id){return memberOf(id)?.nome||id;}
+
+function rebuildTeam(){
+  MEMBERS.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  MEMBERS.forEach(m=>{
+    const x=hashIdx(m.id,BG.length);
+    m.avStyle=`background:${BG[x]};color:${FG[x]}`;
+    const p=m.nome.trim().split(/\s+/);
+    m.av=p.length>=2?(p[0][0]+p[p.length-1][0]).toUpperCase():m.nome.slice(0,2).toUpperCase();
+  });
+  TEAM=MEMBERS.filter(m=>m.ativo!==false);
+  ADMINS=MEMBERS.filter(m=>m.admin).map(m=>m.id);
+  COLAB=TEAM.filter(m=>!m.admin);
+}
 
 /* ===================================================================
    Destinatários que realmente contam para a ciência.
    Fica de fora:
-     - admins (Larissa Pacheco, Geovana, Rosangela) — não dão baixa;
-     - quem saiu da empresa e ficou pendente em comunicado antigo.
-   Quem já saiu mas DEU ciência continua contando, para preservar
-   o histórico do comunicado.
+     - admins — não dão baixa;
+     - quem foi removido/inativado e ficou pendente em comunicado antigo.
+   Quem saiu mas DEU ciência continua contando, para preservar o histórico.
    =================================================================== */
 function destsValidos(c){
   const ci=c.ciencias||{};
@@ -280,14 +317,133 @@ function cienciasValidas(c){
   return Object.keys(c.ciencias||{}).filter(d=>validos.includes(d));
 }
 
-const BG=['#E6F1FB','#E1F5EE','#EEEDFE','#FAEEDA','#FBEAF0','#EAF3DE','#FAECE7','#F1EFE8'];
-const FG=['#185FA5','#0F6E56','#3C3489','#854F0B','#993556','#3B6D11','#993C1D','#5F5E5A'];
-TEAM.forEach((m,i)=>{const x=i%BG.length;m.avStyle=`background:${BG[x]};color:${FG[x]}`;const p=m.nome.trim().split(' ');m.av=p.length>=2?p[0][0]+p[p.length-1][0]:m.nome.slice(0,2).toUpperCase();});
+/* ============================ EQUIPE ============================= */
+function seedEquipe(){
+  const obj={};
+  EQUIPE_INICIAL.forEach(m=>{obj[m.id]={id:m.id,nome:m.nome,admin:!!m.admin,ativo:true,criadoEm:new Date().toISOString()};});
+  eqRef.set(obj);
+}
 
-let comunicados={},currentUser=null,isAdmin=false,selectedTag='',selectedDests=new Set(COLAB.map(c=>c.id)),pendingFiles=[];
+eqRef.on('value',snap=>{
+  const v=snap.val();
+  if(!v||!Object.keys(v).length){seedEquipe();return;}
+  MEMBERS=Object.values(v);
+  rebuildTeam();
+  buildLoginSelect();
+  if(currentUser){
+    const me=memberOf(currentUser.id);
+    if(!me||me.ativo===false){doLogout();toast('Seu acesso foi removido da equipe','err');return;}
+    currentUser=me;isAdmin=!!me.admin;
+    showApp();
+  }
+  if(!booted){booted=true;boot();}
+});
 
-ref.on('value',snap=>{comunicados=snap.val()||{};if(currentUser){renderComunicados();if(isAdmin)renderStats();}});
+function slugify(n){
+  return n.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,20)||('u'+Date.now());
+}
+function novoId(nome){
+  let base=slugify(nome),id=base,i=2;
+  while(MEMBERS.find(m=>m.id===id)){id=base+i;i++;}
+  return id;
+}
 
+async function addMembro(){
+  const nome=(document.getElementById('novo-nome')?.value||'').trim();
+  const adm=!!document.getElementById('novo-admin')?.checked;
+  if(!nome){toast('Informe o nome','err');return;}
+  const dup=MEMBERS.find(m=>m.nome.toLowerCase()===nome.toLowerCase());
+  if(dup&&dup.ativo!==false){toast('Já existe alguém com esse nome','err');return;}
+  if(dup&&dup.ativo===false){
+    if(!confirm(`${dup.nome} está inativo(a). Reativar essa pessoa?`))return;
+    await eqRef.child(dup.id).update({ativo:true});
+    toast('Colaborador reativado','ok');
+    document.getElementById('novo-nome').value='';
+    return;
+  }
+  const id=novoId(nome);
+  await eqRef.child(id).set({id,nome,admin:adm,ativo:true,criadoEm:new Date().toISOString()});
+  document.getElementById('novo-nome').value='';
+  const ck=document.getElementById('novo-admin');if(ck)ck.checked=false;
+  toast('Colaborador adicionado!','ok');
+}
+
+async function toggleAdminMembro(id){
+  const m=memberOf(id);if(!m)return;
+  if(m.admin&&ADMINS.length<=1){toast('É preciso manter ao menos um admin','err');return;}
+  if(m.id===currentUser.id&&m.admin&&!confirm('Você vai perder o acesso de admin. Continuar?'))return;
+  await eqRef.child(id).update({admin:!m.admin});
+  toast(m.admin?'Agora é colaborador comum':'Agora é admin','ok');
+}
+
+async function inativarMembro(id){
+  const m=memberOf(id);if(!m)return;
+  if(m.id===currentUser.id){toast('Você não pode remover a si mesmo','err');return;}
+  if(m.admin&&ADMINS.length<=1){toast('É preciso manter ao menos um admin','err');return;}
+  if(!confirm(`Remover ${m.nome} da equipe?\n\nEle(a) some do login e dos novos comunicados, mas as ciências já registradas continuam no histórico.`))return;
+  await eqRef.child(id).update({ativo:false,removidoEm:new Date().toISOString()});
+  toast('Colaborador removido','ok');
+}
+
+async function reativarMembro(id){
+  await eqRef.child(id).update({ativo:true});
+  toast('Colaborador reativado','ok');
+}
+
+async function renomearMembro(id){
+  const m=memberOf(id);if(!m)return;
+  const novo=prompt('Novo nome:',m.nome);
+  if(novo===null)return;
+  const n=novo.trim();
+  if(!n){toast('Nome não pode ficar vazio','err');return;}
+  await eqRef.child(id).update({nome:n});
+  toast('Nome atualizado','ok');
+}
+
+function renderEquipe(){
+  const el=document.getElementById('equipe-conteudo');
+  if(!el||!isAdmin)return;
+  const ativos=MEMBERS.filter(m=>m.ativo!==false);
+  const inativos=MEMBERS.filter(m=>m.ativo===false);
+  const linha=(m,inativo)=>`<div class="mrow${inativo?' inativo':''}">
+      <div class="av" style="${m.avStyle}">${esc(m.av)}</div>
+      <div class="mnome">${esc(m.nome)}${m.admin?' <span class="admin-badge">ADMIN</span>':''}${m.id===currentUser.id?' <span class="badge badge-blue">você</span>':''}</div>
+      <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap">
+        ${inativo
+          ? `<button class="btn btn-green btn-sm" onclick="reativarMembro('${m.id}')"><i class="ti ti-rotate"></i> Reativar</button>`
+          : `<button class="btn btn-sm" onclick="renomearMembro('${m.id}')" title="Renomear"><i class="ti ti-pencil"></i></button>
+             <button class="btn btn-sm" onclick="toggleAdminMembro('${m.id}')">${m.admin?'<i class="ti ti-user-minus"></i> Tirar admin':'<i class="ti ti-user-shield"></i> Tornar admin'}</button>
+             <button class="btn btn-red btn-sm" onclick="inativarMembro('${m.id}')" title="Remover da equipe"><i class="ti ti-user-off"></i></button>`}
+      </div>
+    </div>`;
+  el.innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Na equipe</div><div class="stat-value">${ativos.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Dão ciência</div><div class="stat-value" style="color:var(--teal)">${COLAB.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Admins</div><div class="stat-value">${ADMINS.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Removidos</div><div class="stat-value" style="color:var(--text3)">${inativos.length}</div></div>
+    </div>
+    <div class="add-box">
+      <div class="sec-title"><i class="ti ti-user-plus"></i> Adicionar colaborador</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input type="text" id="novo-nome" placeholder="Nome completo" style="flex:1;min-width:180px" onkeydown="if(event.key==='Enter')addMembro()">
+        <label class="chk"><input type="checkbox" id="novo-admin"> Admin</label>
+        <button class="btn btn-teal" onclick="addMembro()"><i class="ti ti-plus"></i> Adicionar</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px"><i class="ti ti-info-circle"></i> Admins publicam comunicados e não entram na contagem de ciências.</div>
+    </div>
+    <div class="card">
+      <div class="sec-title"><i class="ti ti-users"></i> Equipe ativa (${ativos.length})</div>
+      ${ativos.map(m=>linha(m,false)).join('')||'<div class="empty">Ninguém cadastrado.</div>'}
+    </div>
+    ${inativos.length?`<div class="card">
+      <div class="sec-title"><i class="ti ti-user-off"></i> Removidos (${inativos.length})</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:6px">Histórico de ciências preservado. Podem ser reativados a qualquer momento.</div>
+      ${inativos.map(m=>linha(m,true)).join('')}
+    </div>`:''}`;
+}
+
+/* ============================ APP ============================= */
 function tagCls(t){return{Urgente:'tag-urgente',Informativo:'tag-informativo','Obrigatório':'tag-obrigatorio',Treinamento:'tag-treinamento',Fiscal:'tag-fiscal'}[t]||'tag-informativo';}
 function fmtD(iso){if(!iso)return'—';return new Date(iso+'T12:00:00').toLocaleDateString('pt-BR');}
 function fmtDT(iso){if(!iso)return'—';const d=new Date(iso);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
@@ -296,22 +452,36 @@ function pct(c){const t=destsValidos(c).length;return t?Math.round(cienciasValid
 function fmtBytes(b){if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1)+'KB';return(b/1048576).toFixed(1)+'MB';}
 function fileIcon(n){const e=n.split('.').pop().toLowerCase();if(e==='pdf')return'<i class="ti ti-file-type-pdf file-icon fi-pdf"></i>';if(['doc','docx'].includes(e))return'<i class="ti ti-file-type-doc file-icon fi-doc"></i>';if(['xls','xlsx'].includes(e))return'<i class="ti ti-file-spreadsheet file-icon fi-xls"></i>';if(['png','jpg','jpeg','gif'].includes(e))return'<i class="ti ti-photo file-icon fi-img"></i>';return'<i class="ti ti-file file-icon fi-other"></i>';}
 
+ref.on('value',snap=>{comunicados=snap.val()||{};if(currentUser){renderComunicados();if(isAdmin){renderStats();if(activeTab==='relatorio')renderRelatorio();}}});
+
 function buildLoginSelect(){
   const sel=document.getElementById('login-sel');
-  TEAM.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(c=>{
-    const o=document.createElement('option');o.value=c.id;o.textContent=c.nome+(ADMINS.includes(c.id)?' ★':'');sel.appendChild(o);
+  const atual=sel.value;
+  sel.innerHTML='<option value="">— Selecione —</option>';
+  TEAM.forEach(c=>{
+    const o=document.createElement('option');o.value=c.id;o.textContent=c.nome+(c.admin?' ★':'');sel.appendChild(o);
   });
+  if(atual&&TEAM.find(t=>t.id===atual))sel.value=atual;
 }
-function doLogin(){const uid=document.getElementById('login-sel').value;if(!uid){toast('Selecione seu nome','err');return;}currentUser=TEAM.find(t=>t.id===uid);isAdmin=ADMINS.includes(uid);sessionStorage.setItem('obdc_user',uid);showApp();}
-function doLogout(){sessionStorage.removeItem('obdc_user');currentUser=null;isAdmin=false;document.getElementById('main-app').style.display='none';document.getElementById('login-wrap').style.display='flex';}
+function boot(){
+  const saved=sessionStorage.getItem('obdc_user');
+  const u=saved?memberOf(saved):null;
+  if(u&&u.ativo!==false){currentUser=u;isAdmin=!!u.admin;showApp();}
+  else{sessionStorage.removeItem('obdc_user');document.getElementById('login-wrap').style.display='flex';}
+}
+function doLogin(){const uid=document.getElementById('login-sel').value;if(!uid){toast('Selecione seu nome','err');return;}currentUser=memberOf(uid);isAdmin=!!currentUser.admin;sessionStorage.setItem('obdc_user',uid);showApp();}
+function doLogout(){sessionStorage.removeItem('obdc_user');currentUser=null;isAdmin=false;document.getElementById('modal').style.display='none';document.getElementById('main-app').style.display='none';document.getElementById('login-wrap').style.display='flex';}
 function showApp(){
   document.getElementById('login-wrap').style.display='none';
   document.getElementById('main-app').style.display='block';
-  document.getElementById('user-info').innerHTML=`${currentUser.nome} ${isAdmin?'<span class="admin-badge">ADMIN</span>':''}`;
+  document.getElementById('user-info').innerHTML=`${esc(currentUser.nome)} ${isAdmin?'<span class="admin-badge">ADMIN</span>':''}`;
   document.getElementById('admin-controls').style.display=isAdmin?'block':'none';
   document.getElementById('colab-header').style.display=isAdmin?'none':'block';
   document.getElementById('tab-relatorio').style.display=isAdmin?'flex':'none';
-  renderComunicados();if(isAdmin)renderStats();
+  document.getElementById('tab-equipe').style.display=isAdmin?'flex':'none';
+  if(!isAdmin&&activeTab!=='comunicados')switchTab('comunicados');
+  renderComunicados();
+  if(isAdmin){renderStats();renderEquipe();if(activeTab==='relatorio')renderRelatorio();}
 }
 
 function renderStats(){
@@ -328,7 +498,7 @@ function renderStats(){
 
 function renderAnexos(anexos){
   if(!anexos||!anexos.length)return'';
-  return`<div class="anexos-wrap"><div class="anexos-title"><i class="ti ti-paperclip"></i> Documentos (${anexos.length})</div>${anexos.map(a=>`<div class="anexo-dl">${fileIcon(a.nome)}<span title="${a.nome}">${a.nome}</span><span style="font-size:11px;color:var(--text3);flex-shrink:0">${fmtBytes(a.tamanho)}</span><a href="${a.url}" target="_blank" rel="noopener" class="btn btn-sm btn-teal" style="padding:4px 10px;font-size:11px"><i class="ti ti-download"></i> Baixar</a></div>`).join('')}</div>`;
+  return`<div class="anexos-wrap"><div class="anexos-title"><i class="ti ti-paperclip"></i> Documentos (${anexos.length})</div>${anexos.map(a=>`<div class="anexo-dl">${fileIcon(a.nome)}<span title="${esc(a.nome)}">${esc(a.nome)}</span><span style="font-size:11px;color:var(--text3);flex-shrink:0">${fmtBytes(a.tamanho)}</span><a href="${esc(a.url)}" target="_blank" rel="noopener" class="btn btn-sm btn-teal" style="padding:4px 10px;font-size:11px"><i class="ti ti-download"></i> Baixar</a></div>`).join('')}</div>`;
 }
 
 function renderComunicados(){
@@ -346,30 +516,32 @@ function renderComunicados(){
     const ok=c.ciencias&&c.ciencias[uid];
     const p=pct(c);
     const destIds=destsValidos(c);
-    const faltam=destIds.filter(d=>!(c.ciencias&&c.ciencias[d])).map(d=>TEAM.find(t=>t.id===d)?.nome).filter(Boolean).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    const faltam=destIds.filter(d=>!(c.ciencias&&c.ciencias[d])).map(d=>nomeDe(d)).filter(Boolean).sort((a,b)=>a.localeCompare(b,'pt-BR'));
     html+=`<div class="card" style="${!isAdmin&&!ok?'border-left:3px solid var(--amber)':''}">
       <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-        ${c.tag?`<span class="tag ${tagCls(c.tag)}">${c.tag}</span>`:''}
-        <span class="card-title" style="flex:1">${c.titulo}</span>
+        ${c.tag?`<span class="tag ${tagCls(c.tag)}">${esc(c.tag)}</span>`:''}
+        <span class="card-title" style="flex:1">${esc(c.titulo)}</span>
         ${!isAdmin?(ok?'<span class="badge badge-green"><i class="ti ti-check" style="font-size:11px"></i> Ciência dada</span>':'<span class="badge badge-amber"><i class="ti ti-clock" style="font-size:11px"></i> Pendente</span>'):''}
       </div>
       <div class="card-meta" style="margin-bottom:10px">
         <i class="ti ti-calendar" style="font-size:12px"></i>${fmtDT(c.createdAt)}
         ${c.prazo?`· Prazo: <strong>${fmtD(c.prazo)}</strong>`:''}
+        ${c.editadoEm?`<span class="badge badge-gray" title="Editado por ${esc(nomeDe(c.editadoPor))}"><i class="ti ti-pencil" style="font-size:11px"></i> editado ${fmtDT(c.editadoEm)}</span>`:''}
         ${isAdmin?`<span class="badge badge-gray">${cienciasValidas(c).length}/${destIds.length} ciências</span>`:''}
         ${(c.anexos&&c.anexos.length)?`<span class="badge badge-gray"><i class="ti ti-paperclip" style="font-size:11px"></i> ${c.anexos.length} doc${c.anexos.length>1?'s':''}</span>`:''}
       </div>
-      <div class="card-body">${c.corpo}</div>
+      <div class="card-body">${esc(c.corpo)}</div>
       ${renderAnexos(c.anexos||[])}
       ${isAdmin?`
-        <div style="display:flex;align-items:center;gap:12px;padding-top:12px;border-top:1px solid var(--border);margin-top:10px">
-          <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:12px;padding-top:12px;border-top:1px solid var(--border);margin-top:10px;flex-wrap:wrap">
+          <div style="flex:1;min-width:180px">
             <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px"><span>Ciências</span><span>${p}%</span></div>
             <div class="progress-bg"><div class="progress-fill" style="width:${p}%"></div></div>
-            ${faltam.length?`<div style="font-size:11px;color:var(--amber);margin-top:4px"><i class="ti ti-clock"></i> Aguardando (${faltam.length}): ${faltam.slice(0,5).join(', ')}${faltam.length>5?' +'+( faltam.length-5):''}</div>`:`<div style="font-size:11px;color:var(--green);margin-top:4px"><i class="ti ti-check"></i> Todos confirmaram</div>`}
+            ${faltam.length?`<div style="font-size:11px;color:var(--amber);margin-top:4px"><i class="ti ti-clock"></i> Aguardando (${faltam.length}): ${esc(faltam.slice(0,5).join(', '))}${faltam.length>5?' +'+( faltam.length-5):''}</div>`:`<div style="font-size:11px;color:var(--green);margin-top:4px"><i class="ti ti-check"></i> Todos confirmaram</div>`}
           </div>
           <div style="display:flex;gap:6px;flex-shrink:0">
             <button class="btn btn-sm" onclick="verDetalhes('${c.id}')"><i class="ti ti-list"></i> Detalhes</button>
+            <button class="btn btn-sm" onclick="openModal('${c.id}')"><i class="ti ti-pencil"></i> Editar</button>
             <button class="btn btn-red btn-sm" onclick="excluir('${c.id}')"><i class="ti ti-trash"></i></button>
           </div>
         </div>`
@@ -407,9 +579,9 @@ function renderRelatorio(){
   document.getElementById('rel-lista').innerHTML=`<div class="sec-title"><i class="ti ti-users"></i> Por colaborador${pendOnly?' (somente pendentes)':''}</div>
     ${statsView.map(c=>`<div class="card" style="padding:12px 16px;margin-bottom:8px">
       <div style="display:flex;align-items:center;gap:10px">
-        <div class="av" style="${c.avStyle}">${c.av}</div>
+        <div class="av" style="${c.avStyle}">${esc(c.av)}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600">${c.nome}</div>
+          <div style="font-size:13px;font-weight:600">${esc(c.nome)}</div>
           <div class="progress-bg" style="margin-top:5px"><div class="progress-fill" style="width:${c.p}%;background:${c.p===100?'var(--teal)':c.p>50?'var(--amber)':'var(--red)'}"></div></div>
         </div>
         <div style="text-align:right;flex-shrink:0;min-width:52px">
@@ -421,9 +593,17 @@ function renderRelatorio(){
     </div>`).join('')}`;
 }
 
+/* ======================= ANEXOS / UPLOAD ======================= */
 function handleFiles(files){Array.from(files).forEach(f=>{if(f.size>15*1024*1024){toast(f.name+': máx 15MB','err');return;}if(!pendingFiles.find(p=>p.name===f.name&&p.size===f.size))pendingFiles.push(f);});renderPending();document.getElementById('file-input').value='';}
-function renderPending(){const el=document.getElementById('pending-files');if(!el)return;if(!pendingFiles.length){el.innerHTML='';return;}el.innerHTML=`<div class="file-lista">${pendingFiles.map((f,i)=>`<div class="file-item">${fileIcon(f.name)}<span class="fn">${f.name}</span><span class="fsz">${fmtBytes(f.size)}</span><button class="btn btn-red btn-sm" onclick="removePending(${i})"><i class="ti ti-x"></i></button></div>`).join('')}</div>`;}
+function renderPending(){const el=document.getElementById('pending-files');if(!el)return;if(!pendingFiles.length){el.innerHTML='';return;}el.innerHTML=`<div class="file-lista">${pendingFiles.map((f,i)=>`<div class="file-item">${fileIcon(f.name)}<span class="fn">${esc(f.name)}</span><span class="fsz">${fmtBytes(f.size)}</span><button class="btn btn-red btn-sm" onclick="removePending(${i})"><i class="ti ti-x"></i></button></div>`).join('')}</div>`;}
 function removePending(i){pendingFiles.splice(i,1);renderPending();}
+function renderEditAnexos(){
+  const el=document.getElementById('existing-anexos');if(!el)return;
+  if(!editAnexos.length){el.innerHTML='';return;}
+  el.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:6px">Documentos já publicados</div>
+    <div class="file-lista">${editAnexos.map((a,i)=>`<div class="file-item">${fileIcon(a.nome)}<span class="fn">${esc(a.nome)}</span><span class="fsz">${fmtBytes(a.tamanho)}</span><a href="${esc(a.url)}" target="_blank" rel="noopener" class="btn btn-sm" style="padding:4px 8px"><i class="ti ti-download"></i></a><button class="btn btn-red btn-sm" onclick="removeExisting(${i})" title="Remover"><i class="ti ti-x"></i></button></div>`).join('')}</div>`;
+}
+function removeExisting(i){editAnexos.splice(i,1);renderEditAnexos();}
 async function uploadAll(cid){
   const results=[];
   for(let i=0;i<pendingFiles.length;i++){
@@ -437,36 +617,51 @@ async function uploadAll(cid){
   return results;
 }
 
+/* ======================= MODAL COMUNICADO ======================= */
+function chipList(){
+  const out=[...COLAB];
+  if(editId&&comunicados[editId]){
+    Object.keys(comunicados[editId].dests||{}).forEach(d=>{
+      if(!out.find(x=>x.id===d)){const m=memberOf(d);if(m&&!m.admin)out.push(m);}
+    });
+  }
+  return out.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+}
 function buildChips(){
   let h='';
-  COLAB.forEach(c=>{h+=`<span class="chip${selectedDests.has(c.id)?' sel':''}" onclick="toggleChip(this,'${c.id}')"><span class="av" style="${c.avStyle};width:18px;height:18px;font-size:8px">${c.av}</span>${c.nome}</span>`;});
+  chipList().forEach(c=>{h+=`<span class="chip${selectedDests.has(c.id)?' sel':''}" onclick="toggleChip(this,'${c.id}')"><span class="av" style="${c.avStyle};width:18px;height:18px;font-size:8px">${esc(c.av)}</span>${esc(c.nome)}${c.ativo===false?' <span style="font-size:10px;color:var(--text3)">(removido)</span>':''}</span>`;});
   const cc=document.getElementById('chip-container');if(cc)cc.innerHTML=h;
 }
 function toggleChip(el,id){if(selectedDests.has(id))selectedDests.delete(id);else selectedDests.add(id);el.classList.toggle('sel',selectedDests.has(id));}
-function selAll(){selectedDests=new Set(COLAB.map(c=>c.id));buildChips();}
+function selAll(){selectedDests=new Set(chipList().map(c=>c.id));buildChips();}
 function selNone(){selectedDests.clear();buildChips();}
 function selTag(el){document.querySelectorAll('.tag-opt').forEach(t=>t.classList.remove('sel'));selectedTag=selectedTag===el.dataset.tag?'':el.dataset.tag;if(selectedTag)el.classList.add('sel');}
 
-function openModal(){
-  selectedTag='';selectedDests=new Set(COLAB.map(c=>c.id));pendingFiles=[];
+function openModal(cid){
+  editId=cid||null;
+  const c=editId?comunicados[editId]:null;
+  if(editId&&!c){toast('Comunicado não encontrado','err');return;}
+  pendingFiles=[];
+  editAnexos=c?JSON.parse(JSON.stringify(c.anexos||[])):[];
+  selectedTag=c?(c.tag||''):'';
+  selectedDests=c?new Set(Object.keys(c.dests||{})):new Set(COLAB.map(x=>x.id));
+  const tags=['Fiscal','Urgente','Obrigatório','Treinamento','Informativo'];
   document.getElementById('modal-inner').innerHTML=`
-    <div class="modal-header"><span class="modal-title">Novo comunicado</span><button class="close-btn" onclick="closeModal(null,true)">&times;</button></div>
-    <div class="form-group"><label class="form-label">Título *</label><input type="text" id="f-titulo" placeholder="Ex: Orientação PIS/COFINS — LC 224/2025"></div>
-    <div class="form-group"><label class="form-label">Conteúdo *</label><textarea id="f-corpo" rows="5" placeholder="Escreva o comunicado aqui..."></textarea></div>
+    <div class="modal-header"><span class="modal-title">${editId?'Editar comunicado':'Novo comunicado'}</span><button class="close-btn" onclick="closeModal(null,true)">&times;</button></div>
+    ${editId?`<div class="alert alert-info"><i class="ti ti-info-circle"></i> As ciências já registradas <strong>serão mantidas</strong>.</div>`:''}
+    <div class="form-group"><label class="form-label">Título *</label><input type="text" id="f-titulo" placeholder="Ex: Orientação PIS/COFINS — LC 224/2025" value="${c?esc(c.titulo):''}"></div>
+    <div class="form-group"><label class="form-label">Conteúdo *</label><textarea id="f-corpo" rows="5" placeholder="Escreva o comunicado aqui...">${c?esc(c.corpo):''}</textarea></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Categoria</label>
         <div class="tag-selector">
-          <span class="tag-opt" data-tag="Fiscal" onclick="selTag(this)">Fiscal</span>
-          <span class="tag-opt" data-tag="Urgente" onclick="selTag(this)">Urgente</span>
-          <span class="tag-opt" data-tag="Obrigatório" onclick="selTag(this)">Obrigatório</span>
-          <span class="tag-opt" data-tag="Treinamento" onclick="selTag(this)">Treinamento</span>
-          <span class="tag-opt" data-tag="Informativo" onclick="selTag(this)">Informativo</span>
+          ${tags.map(t=>`<span class="tag-opt${selectedTag===t?' sel':''}" data-tag="${t}" onclick="selTag(this)">${t}</span>`).join('')}
         </div>
       </div>
-      <div class="form-group"><label class="form-label">Prazo para ciência</label><input type="date" id="f-prazo"></div>
+      <div class="form-group"><label class="form-label">Prazo para ciência</label><input type="date" id="f-prazo" value="${c?esc(c.prazo||''):''}"></div>
     </div>
     <div class="form-group">
       <label class="form-label"><i class="ti ti-paperclip"></i> Documentos (opcional — máx. 15MB)</label>
+      <div id="existing-anexos" style="margin-bottom:10px"></div>
       <div class="upload-area" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="event.preventDefault();this.classList.remove('drag');handleFiles(event.dataTransfer.files)">
         <i class="ti ti-cloud-upload"></i>
         <p><strong>Clique para selecionar</strong> ou arraste aqui</p>
@@ -485,24 +680,46 @@ function openModal(){
     <div class="divider"></div>
     <div style="display:flex;justify-content:flex-end;gap:8px">
       <button class="btn" onclick="closeModal(null,true)">Cancelar</button>
-      <button class="btn btn-teal" id="btn-pub" onclick="publicar()"><i class="ti ti-send"></i> Publicar</button>
+      <button class="btn btn-teal" id="btn-pub" onclick="publicar()"><i class="ti ti-${editId?'device-floppy':'send'}"></i> ${editId?'Salvar alterações':'Publicar'}</button>
     </div>`;
-  buildChips();document.getElementById('modal').style.display='block';setTimeout(()=>document.getElementById('f-titulo')?.focus(),60);
+  buildChips();renderEditAnexos();renderPending();
+  document.getElementById('modal').style.display='block';
+  setTimeout(()=>document.getElementById('f-titulo')?.focus(),60);
 }
-function closeModal(e,force){if(force||(e&&e.target.classList.contains('overlay')))document.getElementById('modal').style.display='none';}
+function closeModal(e,force){if(force||(e&&e.target.classList.contains('overlay'))){document.getElementById('modal').style.display='none';editId=null;editAnexos=[];pendingFiles=[];}}
 
 async function publicar(){
   const titulo=(document.getElementById('f-titulo')?.value||'').trim();
   const corpo=(document.getElementById('f-corpo')?.value||'').trim();
   if(!titulo||!corpo){toast('Preencha título e conteúdo','err');return;}
   if(!selectedDests.size){toast('Selecione ao menos um destinatário','err');return;}
-  const btn=document.getElementById('btn-pub');if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader"></i> Publicando...';}
-  const id='c'+Date.now();
+  const btn=document.getElementById('btn-pub');
+  const editando=!!editId, cid=editando?editId:'c'+Date.now();
+  if(btn){btn.disabled=true;btn.innerHTML=`<i class="ti ti-loader"></i> ${editando?'Salvando...':'Publicando...'}`;}
   const destsObj={};selectedDests.forEach(d=>{destsObj[d]=true;});
-  let anexos=[];
-  if(pendingFiles.length){const prog=document.getElementById('upload-prog');if(prog)prog.style.display='block';toast('Enviando documentos...','info');try{anexos=await uploadAll(id);}catch(e){toast('Erro ao enviar arquivos','err');if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-send"></i> Publicar';}return;}}
-  await ref.child(id).set({id,titulo,corpo,tag:selectedTag,prazo:document.getElementById('f-prazo')?.value||'',dests:destsObj,ciencias:{},anexos,createdAt:new Date().toISOString()});
-  pendingFiles=[];closeModal(null,true);toast('Comunicado publicado!','ok');
+  let novos=[];
+  if(pendingFiles.length){
+    const prog=document.getElementById('upload-prog');if(prog)prog.style.display='block';
+    toast('Enviando documentos...','info');
+    try{novos=await uploadAll(cid);}
+    catch(e){toast('Erro ao enviar arquivos','err');if(btn){btn.disabled=false;btn.innerHTML=`<i class="ti ti-${editando?'device-floppy':'send'}"></i> ${editando?'Salvar alterações':'Publicar'}`;}return;}
+  }
+  const prazo=document.getElementById('f-prazo')?.value||'';
+  if(editando){
+    const c=comunicados[cid]||{};
+    const antigos=c.anexos||[];
+    const removidos=antigos.filter(a=>!editAnexos.find(x=>(x.path&&a.path&&x.path===a.path)||x.url===a.url));
+    await ref.child(cid).update({
+      titulo,corpo,tag:selectedTag,prazo,dests:destsObj,
+      anexos:[...editAnexos,...novos],
+      editadoEm:new Date().toISOString(),editadoPor:currentUser.id
+    });
+    for(const a of removidos){if(a.path){try{await stor.ref(a.path).delete();}catch(e){}}}
+    closeModal(null,true);toast('Comunicado atualizado!','ok');
+  }else{
+    await ref.child(cid).set({id:cid,titulo,corpo,tag:selectedTag,prazo,dests:destsObj,ciencias:{},anexos:novos,createdAt:new Date().toISOString()});
+    closeModal(null,true);toast('Comunicado publicado!','ok');
+  }
 }
 
 async function darCiencia(cid){await ref.child(`${cid}/ciencias/${currentUser.id}`).set({id:currentUser.id,quando:new Date().toISOString()});toast('Ciência registrada!','ok');}
@@ -510,29 +727,29 @@ async function darCiencia(cid){await ref.child(`${cid}/ciencias/${currentUser.id
 async function excluir(cid){
   if(!confirm('Excluir este comunicado e arquivos?'))return;
   const c=comunicados[cid];
-  if(c?.anexos?.length)for(const a of c.anexos){try{await stor.ref(a.path).delete();}catch(e){}}
+  if(c?.anexos?.length)for(const a of c.anexos){if(a.path){try{await stor.ref(a.path).delete();}catch(e){}}}
   await ref.child(cid).remove();toast('Removido','ok');
 }
 
 function verDetalhes(cid){
   const c=comunicados[cid];if(!c)return;
-  const destIds=destsValidos(c).sort((a,b)=>{
-    const na=TEAM.find(t=>t.id===a)?.nome||a, nb=TEAM.find(t=>t.id===b)?.nome||b;
-    return na.localeCompare(nb,'pt-BR');
-  });
-  const items=destIds.map(d=>{const col=TEAM.find(t=>t.id===d);const ci=c.ciencias&&c.ciencias[d];return`<div class="ci-item"><div class="${ci?'ci-ok':'ci-pend'}">${ci?'✓':'○'}</div><div class="av" style="${col?.avStyle||''};width:24px;height:24px;font-size:9px">${col?.av||'?'}</div><div style="flex:1"><div style="font-size:13px;font-weight:500">${col?.nome||d}</div></div><div style="font-size:11px;color:var(--text3);flex-shrink:0">${ci?fmtDT(ci.quando):'<span style="color:var(--amber)">pendente</span>'}</div></div>`;}).join('');
-  document.getElementById('modal-inner').innerHTML=`<div class="modal-header"><span class="modal-title">${c.titulo}</span><button class="close-btn" onclick="closeModal(null,true)">&times;</button></div><div style="font-size:12px;color:var(--text3);margin-bottom:12px">${cienciasValidas(c).length} de ${destIds.length} ciências · ${pct(c)}% concluído</div><div>${items}</div><div class="divider"></div><div style="display:flex;justify-content:flex-end"><button class="btn" onclick="closeModal(null,true)">Fechar</button></div>`;
+  const destIds=destsValidos(c).sort((a,b)=>nomeDe(a).localeCompare(nomeDe(b),'pt-BR'));
+  const items=destIds.map(d=>{const col=memberOf(d);const ci=c.ciencias&&c.ciencias[d];return`<div class="ci-item"><div class="${ci?'ci-ok':'ci-pend'}">${ci?'✓':'○'}</div><div class="av" style="${col?.avStyle||''};width:24px;height:24px;font-size:9px">${esc(col?.av||'?')}</div><div style="flex:1"><div style="font-size:13px;font-weight:500">${esc(col?.nome||d)}${col&&col.ativo===false?' <span style="font-size:10px;color:var(--text3)">(removido)</span>':''}</div></div><div style="font-size:11px;color:var(--text3);flex-shrink:0">${ci?fmtDT(ci.quando):'<span style="color:var(--amber)">pendente</span>'}</div></div>`;}).join('');
+  document.getElementById('modal-inner').innerHTML=`<div class="modal-header"><span class="modal-title">${esc(c.titulo)}</span><button class="close-btn" onclick="closeModal(null,true)">&times;</button></div><div style="font-size:12px;color:var(--text3);margin-bottom:12px">${cienciasValidas(c).length} de ${destIds.length} ciências · ${pct(c)}% concluído</div><div>${items}</div><div class="divider"></div><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" onclick="openModal('${c.id}')"><i class="ti ti-pencil"></i> Editar</button><button class="btn" onclick="closeModal(null,true)">Fechar</button></div>`;
   document.getElementById('modal').style.display='block';
 }
 
-function switchTab(t){['comunicados','relatorio'].forEach(x=>{document.getElementById('panel-'+x).classList.toggle('active',x===t);document.getElementById('tab-'+x).classList.toggle('active',x===t);});if(t==='relatorio')renderRelatorio();}
+function switchTab(t){
+  activeTab=t;
+  ['comunicados','relatorio','equipe'].forEach(x=>{
+    document.getElementById('panel-'+x).classList.toggle('active',x===t);
+    document.getElementById('tab-'+x).classList.toggle('active',x===t);
+  });
+  if(t==='relatorio')renderRelatorio();
+  if(t==='equipe')renderEquipe();
+}
 function copyLink(){navigator.clipboard.writeText('https://larissapacheco96-collab.github.io/Comunicados/index.html').then(()=>toast('Link copiado!','ok'));}
 function toast(msg,type){const el=document.getElementById('toast');el.className='toast toast-'+(type==='ok'?'ok':type==='info'?'info':'err')+' show';el.innerHTML=`<i class="ti ti-${type==='ok'?'check':type==='info'?'info-circle':'alert-circle'}"></i>${msg}`;setTimeout(()=>el.classList.remove('show'),3000);}
-
-buildLoginSelect();
-const saved=sessionStorage.getItem('obdc_user');
-if(saved){const u=TEAM.find(t=>t.id===saved);if(u){currentUser=u;isAdmin=ADMINS.includes(u.id);showApp();}else{document.getElementById('login-wrap').style.display='flex';}}
-else{document.getElementById('login-wrap').style.display='flex';}
 </script>
 </body>
 </html>
