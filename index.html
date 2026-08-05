@@ -347,6 +347,7 @@ function renderComunicados(){
           </div>
           <div style="display:flex;gap:6px;flex-shrink:0">
             <button class="btn btn-sm" onclick="verDetalhes('${c.id}')"><i class="ti ti-list"></i> Detalhes</button>
+            <button class="btn btn-sm" onclick="openModal('${c.id}')"><i class="ti ti-edit"></i> Editar</button>
             <button class="btn btn-red btn-sm" onclick="excluir('${c.id}')"><i class="ti ti-trash"></i></button>
           </div>
         </div>`
@@ -469,37 +470,43 @@ async function insertPastedImage(file,range){
   updateCorpoEmptyState();
 }
 
-function openModal(){
-  selectedTag='';selectedDests=new Set(COLAB.map(c=>c.id));pendingFiles=[];
+let editingComunicadoId=null;
+
+function openModal(editId){
+  const editing=editId?comunicados[editId]:null;
+  editingComunicadoId=editing?editId:null;
+  selectedTag=editing?(editing.tag||''):'';
+  selectedDests=editing?new Set(Object.keys(editing.dests||{})):new Set(COLAB.map(c=>c.id));
+  pendingFiles=[];
   document.getElementById('modal-inner').innerHTML=`
-    <div class="modal-header"><span class="modal-title">Novo comunicado</span><button class="close-btn" onclick="closeModal(null,true)">&times;</button></div>
-    <div class="form-group"><label class="form-label">Título *</label><input type="text" id="f-titulo" placeholder="Ex: Orientação PIS/COFINS — LC 224/2025"></div>
+    <div class="modal-header"><span class="modal-title">${editing?'Editar comunicado':'Novo comunicado'}</span><button class="close-btn" onclick="closeModal(null,true)">&times;</button></div>
+    <div class="form-group"><label class="form-label">Título *</label><input type="text" id="f-titulo" placeholder="Ex: Orientação PIS/COFINS — LC 224/2025" value="${editing?(editing.titulo||'').replace(/"/g,'&quot;'):''}"></div>
     <div class="form-group">
       <label class="form-label">Conteúdo *</label>
       <div class="rte-toolbar">
         <button type="button" class="rte-btn" onmousedown="event.preventDefault()" onclick="corpoBold()" title="Negrito"><i class="ti ti-bold"></i> Negrito</button>
       </div>
-      <div id="f-corpo" class="rte-editable is-empty" contenteditable="true" data-placeholder="Escreva o comunicado aqui... (cole um print com Ctrl+V)" oninput="updateCorpoEmptyState()" onpaste="corpoPaste(event)"></div>
+      <div id="f-corpo" class="rte-editable" contenteditable="true" data-placeholder="Escreva o comunicado aqui... (cole um print com Ctrl+V)" oninput="updateCorpoEmptyState()" onpaste="corpoPaste(event)">${editing?(editing.corpo||''):''}</div>
       <div class="rte-hint"><i class="ti ti-info-circle"></i> Selecione um trecho e clique em Negrito para destacar. Você pode colar um print (Ctrl+V) diretamente aqui.</div>
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Categoria</label>
         <div class="tag-selector">
-          <span class="tag-opt" data-tag="Fiscal" onclick="selTag(this)">Fiscal</span>
-          <span class="tag-opt" data-tag="Urgente" onclick="selTag(this)">Urgente</span>
-          <span class="tag-opt" data-tag="Obrigatório" onclick="selTag(this)">Obrigatório</span>
-          <span class="tag-opt" data-tag="Treinamento" onclick="selTag(this)">Treinamento</span>
-          <span class="tag-opt" data-tag="Informativo" onclick="selTag(this)">Informativo</span>
+          <span class="tag-opt${selectedTag==='Fiscal'?' sel':''}" data-tag="Fiscal" onclick="selTag(this)">Fiscal</span>
+          <span class="tag-opt${selectedTag==='Urgente'?' sel':''}" data-tag="Urgente" onclick="selTag(this)">Urgente</span>
+          <span class="tag-opt${selectedTag==='Obrigatório'?' sel':''}" data-tag="Obrigatório" onclick="selTag(this)">Obrigatório</span>
+          <span class="tag-opt${selectedTag==='Treinamento'?' sel':''}" data-tag="Treinamento" onclick="selTag(this)">Treinamento</span>
+          <span class="tag-opt${selectedTag==='Informativo'?' sel':''}" data-tag="Informativo" onclick="selTag(this)">Informativo</span>
         </div>
       </div>
-      <div class="form-group"><label class="form-label">Prazo para ciência</label><input type="date" id="f-prazo"></div>
+      <div class="form-group"><label class="form-label">Prazo para ciência</label><input type="date" id="f-prazo" value="${editing?(editing.prazo||''):''}"></div>
     </div>
     <div class="form-group">
       <label class="form-label"><i class="ti ti-paperclip"></i> Documentos (opcional — máx. 15MB)</label>
       <div class="upload-area" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="event.preventDefault();this.classList.remove('drag');handleFiles(event.dataTransfer.files)">
         <i class="ti ti-cloud-upload"></i>
         <p><strong>Clique para selecionar</strong> ou arraste aqui</p>
-        <p style="margin-top:4px;font-size:11px">PDF, Word, Excel, PowerPoint, imagens, ZIP</p>
+        <p style="margin-top:4px;font-size:11px">PDF, Word, Excel, PowerPoint, imagens, ZIP${editing&&editing.anexos&&editing.anexos.length?' (novos arquivos serão somados aos já anexados)':''}</p>
       </div>
       <div id="pending-files"></div>
       <div id="upload-prog" style="display:none;margin-top:8px">
@@ -514,11 +521,11 @@ function openModal(){
     <div class="divider"></div>
     <div style="display:flex;justify-content:flex-end;gap:8px">
       <button class="btn" onclick="closeModal(null,true)">Cancelar</button>
-      <button class="btn btn-teal" id="btn-pub" onclick="publicar()"><i class="ti ti-send"></i> Publicar</button>
+      <button class="btn btn-teal" id="btn-pub" onclick="publicar()"><i class="ti ti-send"></i> ${editing?'Salvar alterações':'Publicar'}</button>
     </div>`;
-  buildChips();document.getElementById('modal').style.display='block';setTimeout(()=>document.getElementById('f-titulo')?.focus(),60);
+  buildChips();updateCorpoEmptyState();document.getElementById('modal').style.display='block';setTimeout(()=>document.getElementById('f-titulo')?.focus(),60);
 }
-function closeModal(e,force){if(force||(e&&e.target.classList.contains('overlay')))document.getElementById('modal').style.display='none';}
+function closeModal(e,force){if(force||(e&&e.target.classList.contains('overlay'))){document.getElementById('modal').style.display='none';editingComunicadoId=null;}}
 
 async function publicar(){
   const titulo=(document.getElementById('f-titulo')?.value||'').trim();
@@ -527,13 +534,18 @@ async function publicar(){
   const corpo=(corpoEl?.innerHTML||'').trim();
   if(!titulo||!corpoTexto){toast('Preencha título e conteúdo','err');return;}
   if(!selectedDests.size){toast('Selecione ao menos um destinatário','err');return;}
-  const btn=document.getElementById('btn-pub');if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader"></i> Publicando...';}
-  const id='c'+Date.now();
+  const btn=document.getElementById('btn-pub');if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader"></i> Salvando...';}
   const destsObj={};selectedDests.forEach(d=>{destsObj[d]=true;});
-  let anexos=[];
-  if(pendingFiles.length){const prog=document.getElementById('upload-prog');if(prog)prog.style.display='block';toast('Enviando documentos...','info');try{anexos=await uploadAll(id);}catch(e){toast('Erro ao enviar arquivos','err');if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-send"></i> Publicar';}return;}}
-  await ref.child(id).set({id,titulo,corpo,tag:selectedTag,prazo:document.getElementById('f-prazo')?.value||'',dests:destsObj,ciencias:{},anexos,createdAt:new Date().toISOString()});
-  pendingFiles=[];closeModal(null,true);toast('Comunicado publicado!','ok');
+  const editing=editingComunicadoId?comunicados[editingComunicadoId]:null;
+  const id=editingComunicadoId||('c'+Date.now());
+  let anexos=editing?(editing.anexos||[]):[];
+  if(pendingFiles.length){const prog=document.getElementById('upload-prog');if(prog)prog.style.display='block';toast('Enviando documentos...','info');try{const novos=await uploadAll(id);anexos=anexos.concat(novos);}catch(e){toast('Erro ao enviar arquivos','err');if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-send"></i> '+(editing?'Salvar alterações':'Publicar');}return;}}
+  if(editing){
+    await ref.child(id).update({titulo,corpo,tag:selectedTag,prazo:document.getElementById('f-prazo')?.value||'',dests:destsObj,anexos});
+  }else{
+    await ref.child(id).set({id,titulo,corpo,tag:selectedTag,prazo:document.getElementById('f-prazo')?.value||'',dests:destsObj,ciencias:{},anexos,createdAt:new Date().toISOString()});
+  }
+  pendingFiles=[];editingComunicadoId=null;closeModal(null,true);toast(editing?'Alterações salvas!':'Comunicado publicado!','ok');
 }
 
 async function darCiencia(cid){await ref.child(`${cid}/ciencias/${currentUser.id}`).set({id:currentUser.id,quando:new Date().toISOString()});toast('Ciência registrada!','ok');}
