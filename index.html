@@ -147,6 +147,9 @@ input[type=file]{display:none}
     <div><div class="topbar-title">Comunicados & Ciência</div><div class="topbar-subtitle">Controle de leitura em tempo real</div></div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
+    <button id="btn-gerenciar-colabs" onclick="openGerenciarColabsCom()" style="display:none;font-family:inherit;font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;border:1px solid #007e6a;background:#e0f5f0;color:#007e6a;cursor:pointer;display:none;align-items:center;gap:5px">
+      <i class="ti ti-users" style="font-size:13px"></i> Colaboradores
+    </button>
     <span class="live-dot"></span>
     <span style="font-size:11px;color:var(--text3)" id="user-info">carregando...</span>
   </div>
@@ -223,7 +226,7 @@ const firebaseConfig = {
   appId:"1:632392533533:web:59975b1915b6b90aaba8f4"
 };
 firebase.initializeApp(firebaseConfig);
-const db=firebase.database(), ref=db.ref('comunicados');
+const db=firebase.database(), ref=db.ref('comunicados'), refColabsCom=db.ref('colaboradores_comunicados');
 
 const ADMINS=['larissap','rosangela','geovana'];
 
@@ -260,8 +263,33 @@ const TEAM=[
   {id:'gustavo',nome:'Gustavo'},
 ];
 
-// Colaboradores que recebem ciência = time SEM os admins
-const COLAB=TEAM.filter(t=>!ADMINS.includes(t.id));
+// Colaboradores dinâmicos — gerenciados via Firebase
+let TEAM_DIN = [...TEAM]; // começa com a lista estática, depois sobrescrito pelo banco
+let COLAB = TEAM_DIN.filter(t=>!ADMINS.includes(t.id));
+
+function recalcColab(){
+  const x=i=>i%BG.length;
+  TEAM_DIN.forEach((m,i)=>{
+    if(!m.avStyle){ const p=m.nome.trim().split(' '); m.av=p.length>=2?p[0][0]+p[p.length-1][0]:m.nome.slice(0,2).toUpperCase(); m.avStyle=`background:${BG[x(i)]};color:${FG[x(i)]}`; }
+  });
+  COLAB = TEAM_DIN.filter(t=>!ADMINS.includes(t.id));
+}
+
+// Listener Firebase — migra lista estática na primeira carga
+refColabsCom.once('value', snap => {
+  if(!snap.val()){
+    const updates={};
+    TEAM.forEach(m=>{ updates[m.id]={id:m.id,nome:m.nome}; });
+    refColabsCom.set(updates);
+  }
+});
+refColabsCom.on('value', snap => {
+  const data = snap.val()||{};
+  TEAM_DIN = Object.values(data).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  recalcColab();
+  buildChips();
+  renderComunicados();
+});
 
 const BG=['#E6F1FB','#E1F5EE','#EEEDFE','#FAEEDA','#FBEAF0','#EAF3DE','#FAECE7','#F1EFE8'];
 const FG=['#185FA5','#0F6E56','#3C3489','#854F0B','#993556','#3B6D11','#993C1D','#5F5E5A'];
@@ -279,8 +307,8 @@ function pct(c){const t=Object.keys(c.dests||{}).length;return t?Math.round(Obje
 function fmtBytes(b){if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1)+'KB';return(b/1048576).toFixed(1)+'MB';}
 function fileIcon(n){const e=n.split('.').pop().toLowerCase();if(e==='pdf')return'<i class="ti ti-file-type-pdf file-icon fi-pdf"></i>';if(['doc','docx'].includes(e))return'<i class="ti ti-file-type-doc file-icon fi-doc"></i>';if(['xls','xlsx'].includes(e))return'<i class="ti ti-file-spreadsheet file-icon fi-xls"></i>';if(['png','jpg','jpeg','gif'].includes(e))return'<i class="ti ti-photo file-icon fi-img"></i>';return'<i class="ti ti-file file-icon fi-other"></i>';}
 
-function buildLoginSelect(){const sel=document.getElementById('login-sel');TEAM.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.nome+(ADMINS.includes(c.id)?' ★':'');sel.appendChild(o);});}
-function doLogin(){const uid=document.getElementById('login-sel').value;if(!uid){toast('Selecione seu nome','err');return;}currentUser=TEAM.find(t=>t.id===uid);isAdmin=ADMINS.includes(uid);sessionStorage.setItem('obdc_user',uid);showApp();}
+function buildLoginSelect(){const sel=document.getElementById('login-sel');sel.innerHTML='<option value="">— Selecione —</option>';TEAM_DIN.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.nome+(ADMINS.includes(c.id)?' ★':'');sel.appendChild(o);});}
+function doLogin(){const uid=document.getElementById('login-sel').value;if(!uid){toast('Selecione seu nome','err');return;}currentUser=TEAM_DIN.find(t=>t.id===uid)||TEAM.find(t=>t.id===uid);isAdmin=ADMINS.includes(uid);sessionStorage.setItem('obdc_user',uid);showApp();}
 function doLogout(){sessionStorage.removeItem('obdc_user');currentUser=null;isAdmin=false;document.getElementById('main-app').style.display='none';document.getElementById('login-wrap').style.display='flex';}
 function showApp(){
   document.getElementById('login-wrap').style.display='none';
@@ -289,6 +317,8 @@ function showApp(){
   document.getElementById('admin-controls').style.display=isAdmin?'block':'none';
   document.getElementById('colab-header').style.display=isAdmin?'none':'block';
   document.getElementById('tab-relatorio').style.display=isAdmin?'flex':'none';
+  const btnGC=document.getElementById('btn-gerenciar-colabs');
+  if(btnGC) btnGC.style.display=isAdmin?'inline-flex':'none';
   renderComunicados();if(isAdmin)renderStats();
 }
 
@@ -597,8 +627,84 @@ function toast(msg,type){const el=document.getElementById('toast');el.className=
 
 buildLoginSelect();
 const saved=sessionStorage.getItem('obdc_user');
-if(saved){const u=TEAM.find(t=>t.id===saved);if(u){currentUser=u;isAdmin=ADMINS.includes(u.id);showApp();}else{document.getElementById('login-wrap').style.display='flex';}}
+if(saved){const u=TEAM_DIN.find(t=>t.id===saved)||TEAM.find(t=>t.id===saved);if(u){currentUser=u;isAdmin=ADMINS.includes(u.id);showApp();}else{document.getElementById('login-wrap').style.display='flex';}}
 else{document.getElementById('login-wrap').style.display='flex';}
+
+/* ===== GERENCIAR COLABORADORES (admin) ===== */
+function colabKeyCom(nome){ return nome.trim().toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,20)||Date.now().toString(); }
+function openGerenciarColabsCom(){
+  renderListaColabsCom();
+  document.getElementById('colab-com-nome').value='';
+  document.getElementById('modal-colabs-com').style.display='flex';
+}
+function closeGerenciarColabsCom(){ document.getElementById('modal-colabs-com').style.display='none'; }
+function renderListaColabsCom(){
+  const lista=document.getElementById('colabs-com-lista');
+  const count=document.getElementById('colabs-com-count');
+  const nomes=[...TEAM_DIN].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  if(count) count.textContent=nomes.length;
+  if(!lista) return;
+  lista.innerHTML=nomes.map(m=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #f0efe9;font-size:13px">
+      <span>${m.nome}${ADMINS.includes(m.id)?' <span style="font-size:10px;background:#e0f5f0;color:#007e6a;padding:1px 6px;border-radius:10px;font-weight:600">ADMIN</span>':''}</span>
+      ${!ADMINS.includes(m.id)?`<button onclick="removerColabCom('${m.id}')"
+        style="background:none;border:none;cursor:pointer;color:#ccc;font-size:15px;padding:3px 7px;border-radius:4px;display:flex;align-items:center"
+        onmouseover="this.style.color='#b91c1c';this.style.background='#fef2f2'"
+        onmouseout="this.style.color='#ccc';this.style.background='none'">
+        <i class="ti ti-trash"></i>
+      </button>`:`<span style="font-size:10px;color:#aaa">protegido</span>`}
+    </div>`).join('')||'<div style="padding:16px;text-align:center;color:#aaa;font-size:13px">Nenhum colaborador.</div>';
+}
+function adicionarColabCom(){
+  const nome=(document.getElementById('colab-com-nome').value||'').trim();
+  if(!nome){toast('Digite o nome completo.','err');return;}
+  if(TEAM_DIN.some(t=>t.nome.toLowerCase()===nome.toLowerCase())){toast('Colaborador já existe.','err');return;}
+  const id=colabKeyCom(nome)+(Date.now()%10000);
+  refColabsCom.child(id).set({id,nome}).then(()=>{
+    document.getElementById('colab-com-nome').value='';
+    toast(`"${nome}" adicionado!`,'ok');
+  }).catch(e=>toast('Erro: '+e.message,'err'));
+}
+function removerColabCom(id){
+  const m=TEAM_DIN.find(t=>t.id===id);
+  if(!m) return;
+  if(!confirm(`Remover "${m.nome}"?\n\nOs comunicados enviados para esta pessoa serão mantidos.`)) return;
+  refColabsCom.child(id).remove().then(()=>toast(`"${m.nome}" removido.`,'ok')).catch(e=>toast('Erro: '+e.message,'err'));
+}
 </script>
+
+<!-- Modal gerenciar colaboradores -->
+<div id="modal-colabs-com" style="display:none;position:fixed;inset:0;background:rgba(15,25,35,.45);align-items:center;justify-content:center;z-index:200">
+  <div style="background:#fff;border-radius:12px;padding:1.5rem;width:min(460px,95vw);box-shadow:0 8px 32px rgba(0,0,0,.18);max-height:90vh;display:flex;flex-direction:column">
+    <div style="font-size:16px;font-weight:600;margin-bottom:.5rem;display:flex;align-items:center;gap:8px">
+      <i class="ti ti-users" style="color:#007e6a"></i> Gerenciar colaboradores
+    </div>
+    <p style="font-size:12px;color:#888;margin-bottom:1rem">Adicione ou remova pessoas da lista de ciência dos comunicados.</p>
+
+    <!-- Adicionar -->
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <input id="colab-com-nome" type="text" placeholder="Nome completo..."
+        style="flex:1;font-family:inherit;font-size:13px;padding:8px 12px;border:1px solid #ccc;border-radius:8px"
+        onkeydown="if(event.key==='Enter') adicionarColabCom()">
+      <button onclick="adicionarColabCom()"
+        style="font-family:inherit;font-size:12px;font-weight:600;padding:8px 14px;border-radius:8px;border:none;background:#007e6a;color:#fff;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px">
+        <i class="ti ti-plus"></i> Adicionar
+      </button>
+    </div>
+
+    <!-- Lista -->
+    <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">
+      Colaboradores ativos (<span id="colabs-com-count">0</span>)
+    </div>
+    <div id="colabs-com-lista" style="flex:1;overflow-y:auto;border:1px solid #e4e2dc;border-radius:8px;min-height:100px;max-height:340px"></div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:14px">
+      <button onclick="closeGerenciarColabsCom()"
+        style="font-family:inherit;font-size:13px;padding:8px 18px;border-radius:8px;border:1px solid #ccc;background:#f5f5f2;cursor:pointer">
+        Fechar
+      </button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
