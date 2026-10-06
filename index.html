@@ -210,9 +210,8 @@ input[type=file]{display:none}
 <div id="toast" class="toast"></div>
 <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.txt,.zip" onchange="handleFiles(this.files)">
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script>
 const firebaseConfig = {
   apiKey:"AIzaSyCU4sTnPV-R9Ew6lA-2j2v0xfi-WG7njis",
@@ -224,7 +223,7 @@ const firebaseConfig = {
   appId:"1:632392533533:web:59975b1915b6b90aaba8f4"
 };
 firebase.initializeApp(firebaseConfig);
-const db=firebase.database(), stor=firebase.storage(), ref=db.ref('comunicados');
+const db=firebase.database(), ref=db.ref('comunicados');
 
 const ADMINS=['larissap','rosangela','geovana'];
 
@@ -307,7 +306,7 @@ function renderStats(){
 
 function renderAnexos(anexos){
   if(!anexos||!anexos.length)return'';
-  return`<div class="anexos-wrap"><div class="anexos-title"><i class="ti ti-paperclip"></i> Documentos (${anexos.length})</div>${anexos.map(a=>`<div class="anexo-dl">${fileIcon(a.nome)}<span title="${a.nome}">${a.nome}</span><span style="font-size:11px;color:var(--text3);flex-shrink:0">${fmtBytes(a.tamanho)}</span><a href="${a.url}" target="_blank" rel="noopener" class="btn btn-sm btn-teal" style="padding:4px 10px;font-size:11px"><i class="ti ti-download"></i> Baixar</a></div>`).join('')}</div>`;
+  return`<div class="anexos-wrap"><div class="anexos-title"><i class="ti ti-paperclip"></i> Documentos (${anexos.length})</div>${anexos.map(a=>{const src=a.b64||a.url||'';return`<div class="anexo-dl">${fileIcon(a.nome)}<span title="${a.nome}">${a.nome}</span><span style="font-size:11px;color:var(--text3);flex-shrink:0">${fmtBytes(a.tamanho)}</span>${src?`<a href="${src}" download="${a.nome}" class="btn btn-sm btn-teal" style="padding:4px 10px;font-size:11px"><i class="ti ti-download"></i> Baixar</a>`:`<span style="font-size:11px;color:#aaa">indisponível</span>`}</div>`;}).join('')}</div>`;
 }
 
 function renderComunicados(){
@@ -404,15 +403,43 @@ function renderRelatorio(){
 function handleFiles(files){Array.from(files).forEach(f=>{if(f.size>15*1024*1024){toast(f.name+': máx 15MB','err');return;}if(!pendingFiles.find(p=>p.name===f.name&&p.size===f.size))pendingFiles.push(f);});renderPending();document.getElementById('file-input').value='';}
 function renderPending(){const el=document.getElementById('pending-files');if(!el)return;if(!pendingFiles.length){el.innerHTML='';return;}el.innerHTML=`<div class="file-lista">${pendingFiles.map((f,i)=>`<div class="file-item">${fileIcon(f.name)}<span class="fn">${f.name}</span><span class="fsz">${fmtBytes(f.size)}</span><button class="btn btn-red btn-sm" onclick="removePending(${i})"><i class="ti ti-x"></i></button></div>`).join('')}</div>`;}
 function removePending(i){pendingFiles.splice(i,1);renderPending();}
+async function fileToBase64(file, maxBytes=900000){
+  return new Promise((res,rej)=>{
+    // Imagens: comprimir
+    if(file.type.startsWith('image/')){
+      const img=new Image(), url=URL.createObjectURL(file);
+      img.onload=()=>{
+        URL.revokeObjectURL(url);
+        let q=0.85, w=img.width, h=img.height;
+        const MAX=1600;
+        if(w>MAX||h>MAX){const r=Math.min(MAX/w,MAX/h);w=Math.round(w*r);h=Math.round(h*r);}
+        const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        let b64=cv.toDataURL('image/jpeg',q);
+        while(b64.length>maxBytes&&q>0.3){q-=0.1;b64=cv.toDataURL('image/jpeg',q);}
+        if(b64.length>maxBytes){rej(new Error('Imagem muito grande mesmo após compressão. Máximo: 900KB.'));return;}
+        res(b64);
+      };
+      img.onerror=rej; img.src=url;
+    } else {
+      // Outros arquivos: base64 direto (limite 900KB)
+      if(file.size>maxBytes){rej(new Error(`Arquivo "${file.name}" excede 900KB. Reduza o tamanho ou use um link externo.`));return;}
+      const fr=new FileReader();
+      fr.onload=()=>res(fr.result);
+      fr.onerror=rej; fr.readAsDataURL(file);
+    }
+  });
+}
+
 async function uploadAll(cid){
   const results=[];
   for(let i=0;i<pendingFiles.length;i++){
     const f=pendingFiles[i];
-    const lEl=document.getElementById('prog-label');if(lEl)lEl.textContent=`Enviando ${i+1}/${pendingFiles.length}: ${f.name}`;
-    const sRef=stor.ref(`anexos/${cid}/${Date.now()}_${f.name}`);
-    const task=sRef.put(f);
-    await new Promise((res,rej)=>{task.on('state_changed',snap=>{const pEl=document.getElementById('prog-fill');if(pEl)pEl.style.width=Math.round(snap.bytesTransferred/snap.totalBytes*100)+'%';},rej,res);});
-    results.push({nome:f.name,tamanho:f.size,url:await sRef.getDownloadURL(),path:sRef.fullPath});
+    const lEl=document.getElementById('prog-label');if(lEl)lEl.textContent=`Processando ${i+1}/${pendingFiles.length}: ${f.name}`;
+    const pEl=document.getElementById('prog-fill');if(pEl)pEl.style.width=Math.round((i/pendingFiles.length)*100)+'%';
+    const b64=await fileToBase64(f);
+    results.push({nome:f.name, tamanho:f.size, b64, tipo:f.type});
+    if(pEl)pEl.style.width=Math.round(((i+1)/pendingFiles.length)*100)+'%';
   }
   return results;
 }
@@ -458,16 +485,13 @@ async function insertPastedImage(file,range){
   document.execCommand('insertHTML',false,`<span id="${phId}" style="color:#888;font-size:12px">Enviando imagem…</span>`);
   updateCorpoEmptyState();
   try{
-    const path=`corpo-images/${Date.now()}_${(file.name||'colada.png').replace(/[^a-zA-Z0-9._-]/g,'_')}`;
-    const sRef=stor.ref(path);
-    await sRef.put(file);
-    const url=await sRef.getDownloadURL();
+    const b64=await fileToBase64(file, 900000);
     const ph=document.getElementById(phId);
-    if(ph)ph.outerHTML=`<img src="${url}" alt="imagem colada">`;
+    if(ph)ph.outerHTML=`<img src="${b64}" alt="imagem colada" style="max-width:100%;border-radius:4px">`;
   }catch(err){
     const ph=document.getElementById(phId);
     if(ph)ph.remove();
-    toast('Erro ao enviar imagem colada','err');
+    toast('Erro ao processar imagem: '+(err.message||'verifique o tamanho'),'err');
   }
   updateCorpoEmptyState();
 }
@@ -504,7 +528,7 @@ function openModal(editId){
       <div class="form-group"><label class="form-label">Prazo para ciência</label><input type="date" id="f-prazo" value="${editing?(editing.prazo||''):''}"></div>
     </div>
     <div class="form-group">
-      <label class="form-label"><i class="ti ti-paperclip"></i> Documentos (opcional — máx. 15MB)</label>
+      <label class="form-label"><i class="ti ti-paperclip"></i> Documentos (opcional — máx. 900KB por arquivo · imagens são comprimidas automaticamente)</label>
       <div class="upload-area" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="event.preventDefault();this.classList.remove('drag');handleFiles(event.dataTransfer.files)">
         <i class="ti ti-cloud-upload"></i>
         <p><strong>Clique para selecionar</strong> ou arraste aqui</p>
@@ -555,7 +579,7 @@ async function darCiencia(cid){await ref.child(`${cid}/ciencias/${currentUser.id
 async function excluir(cid){
   if(!confirm('Excluir este comunicado e arquivos?'))return;
   const c=comunicados[cid];
-  if(c?.anexos?.length)for(const a of c.anexos){try{await stor.ref(a.path).delete();}catch(e){}}
+  // anexos base64 são deletados junto com o nó do comunicado, sem ação extra
   await ref.child(cid).remove();toast('Removido','ok');
 }
 
