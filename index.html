@@ -337,23 +337,35 @@ function renderComunicados(){
   const el=document.getElementById('lista-comunicados');
   const uid=currentUser?.id;
   const all=lista();
-  const view=isAdmin?all:all.filter(c=>c.dests&&c.dests[uid]);
+  // Colaborador vê: comunicados endereçados a ele OU todos os publicados (histórico para novos membros)
+  // Prazo vencido NÃO esconde o comunicado — some só após dar ciência
+  const view=isAdmin?all:all.filter(c=>{
+    const emDests=c.dests&&c.dests[uid];
+    const jaDeuCiencia=c.ciencias&&c.ciencias[uid];
+    // Se está nos dests e não deu ciência → mostrar sempre (independente de prazo)
+    if(emDests&&!jaDeuCiencia) return true;
+    // Se está nos dests e já deu ciência → mostrar (histórico)
+    if(emDests&&jaDeuCiencia) return true;
+    // Se NÃO está nos dests → mostrar como histórico/leitura (para novos membros)
+    if(!emDests) return true;
+    return false;
+  });
   if(!view.length){el.innerHTML='<div class="empty"><i class="ti ti-speakerphone"></i>'+(isAdmin?'Nenhum comunicado. Clique em <strong>Novo comunicado</strong>.':'Você não tem comunicados no momento.')+'</div>';return;}
   let html='';
   if(!isAdmin){
-    const pend=view.filter(c=>!(c.ciencias&&c.ciencias[uid])).length;
+    const pend=view.filter(c=>(c.dests&&c.dests[uid])&&!(c.ciencias&&c.ciencias[uid])).length;
     html+=pend>0?`<div class="alert alert-warn"><i class="ti ti-alert-circle"></i>Você tem <strong>${pend}</strong> comunicado${pend>1?'s':''} aguardando ciência.</div>`:`<div class="alert alert-ok"><i class="ti ti-circle-check"></i>Você está em dia!</div>`;
   }
   view.forEach(c=>{
     const ok=c.ciencias&&c.ciencias[uid];
     const p=pct(c);
     const destIds=Object.keys(c.dests||{});
-    const faltam=destIds.filter(d=>!(c.ciencias&&c.ciencias[d])).map(d=>TEAM.find(t=>t.id===d)?.nome).filter(Boolean);
+    const faltam=destIds.filter(d=>!(c.ciencias&&c.ciencias[d])).map(d=>TEAM_DIN.find(t=>t.id===d)?.nome).filter(Boolean);
     html+=`<div class="card" style="${!isAdmin&&!ok?'border-left:3px solid var(--amber)':''}">
       <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;flex-wrap:wrap">
         ${c.tag?`<span class="tag ${tagCls(c.tag)}">${c.tag}</span>`:''}
         <span class="card-title" style="flex:1">${c.titulo}</span>
-        ${!isAdmin?(ok?'<span class="badge badge-green"><i class="ti ti-check" style="font-size:11px"></i> Ciência dada</span>':'<span class="badge badge-amber"><i class="ti ti-clock" style="font-size:11px"></i> Pendente</span>'):''}
+        ${!isAdmin?(ok?'<span class="badge badge-green"><i class="ti ti-check" style="font-size:11px"></i> Ciência dada</span>':(c.dests&&c.dests[uid])?'<span class="badge badge-amber"><i class="ti ti-clock" style="font-size:11px"></i> Pendente</span>':'<span class="badge badge-gray"><i class="ti ti-eye" style="font-size:11px"></i> Histórico</span>'):''}
       </div>
       <div class="card-meta" style="margin-bottom:10px">
         <i class="ti ti-calendar" style="font-size:12px"></i>${fmtDT(c.createdAt)}
@@ -377,9 +389,10 @@ function renderComunicados(){
           </div>
         </div>`
       :ok?`<div style="font-size:12px;color:var(--green);padding-top:10px;border-top:1px solid var(--border);margin-top:10px"><i class="ti ti-check-circle"></i> Ciência registrada em ${fmtDT(ok.quando)}</div>`
-        :`<div style="padding-top:10px;border-top:1px solid var(--border);margin-top:10px">
+        :(c.dests&&c.dests[uid])?`<div style="padding-top:10px;border-top:1px solid var(--border);margin-top:10px">
             <button class="btn btn-green" onclick="darCiencia('${c.id}')"><i class="ti ti-check"></i> Confirmar leitura e entendimento</button>
           </div>`
+        :`<div style="font-size:12px;color:var(--text3);padding-top:10px;border-top:1px solid var(--border);margin-top:10px"><i class="ti ti-eye"></i> Comunicado anterior — apenas visualização</div>`
       }
     </div>`;
   });
