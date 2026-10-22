@@ -162,7 +162,7 @@ input[type=file]{display:none}
     <p class="login-sub">Selecione seu nome para acessar</p>
     <div class="form-group" style="text-align:left">
       <label class="form-label">Seu nome</label>
-      <select id="login-sel"><option value="">— Selecione —</option></select>
+      <select id="login-sel"><option value="">⏳ Carregando...</option></select>
     </div>
     <button class="btn btn-teal btn-lg" onclick="doLogin()" style="margin-top:8px"><i class="ti ti-login"></i> Entrar</button>
   </div>
@@ -275,18 +275,12 @@ function recalcColab(){
   COLAB = TEAM_DIN.filter(t=>!ADMINS.includes(t.id));
 }
 
-// Listener Firebase — migra lista estática na primeira carga
-refColabsCom.once('value', snap => {
-  if(!snap.val()){
-    const updates={};
-    TEAM.forEach(m=>{ updates[m.id]={id:m.id,nome:m.nome}; });
-    refColabsCom.set(updates);
-  }
-});
+// Listener Firebase — carrega colaboradores dinamicamente
 refColabsCom.on('value', snap => {
   const data = snap.val()||{};
   TEAM_DIN = Object.values(data).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   recalcColab();
+  buildLoginSelect();
   buildChips();
   renderComunicados();
 });
@@ -308,7 +302,7 @@ function fmtBytes(b){if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(
 function fileIcon(n){const e=n.split('.').pop().toLowerCase();if(e==='pdf')return'<i class="ti ti-file-type-pdf file-icon fi-pdf"></i>';if(['doc','docx'].includes(e))return'<i class="ti ti-file-type-doc file-icon fi-doc"></i>';if(['xls','xlsx'].includes(e))return'<i class="ti ti-file-spreadsheet file-icon fi-xls"></i>';if(['png','jpg','jpeg','gif'].includes(e))return'<i class="ti ti-photo file-icon fi-img"></i>';return'<i class="ti ti-file file-icon fi-other"></i>';}
 
 function buildLoginSelect(){const sel=document.getElementById('login-sel');sel.innerHTML='<option value="">— Selecione —</option>';TEAM_DIN.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.nome+(ADMINS.includes(c.id)?' ★':'');sel.appendChild(o);});}
-function doLogin(){const uid=document.getElementById('login-sel').value;if(!uid){toast('Selecione seu nome','err');return;}currentUser=TEAM_DIN.find(t=>t.id===uid)||TEAM.find(t=>t.id===uid);isAdmin=ADMINS.includes(uid);sessionStorage.setItem('obdc_user',uid);showApp();}
+function doLogin(){const uid=document.getElementById('login-sel').value;if(!uid){toast('Selecione seu nome','err');return;}currentUser=TEAM_DIN.find(t=>t.id===uid);if(!currentUser){toast('Colaborador não encontrado. Peça ao admin para te adicionar.','err');return;}isAdmin=ADMINS.includes(uid);sessionStorage.setItem('obdc_user',uid);showApp();}
 function doLogout(){sessionStorage.removeItem('obdc_user');currentUser=null;isAdmin=false;document.getElementById('main-app').style.display='none';document.getElementById('login-wrap').style.display='flex';}
 function showApp(){
   document.getElementById('login-wrap').style.display='none';
@@ -625,10 +619,19 @@ function switchTab(t){['comunicados','relatorio'].forEach(x=>{document.getElemen
 function copyLink(){navigator.clipboard.writeText('https://larissapacheco96-collab.github.io/Comunicados/index.html').then(()=>toast('Link copiado!','ok'));}
 function toast(msg,type){const el=document.getElementById('toast');el.className='toast toast-'+(type==='ok'?'ok':type==='info'?'info':'err')+' show';el.innerHTML=`<i class="ti ti-${type==='ok'?'check':type==='info'?'info-circle':'alert-circle'}"></i>${msg}`;setTimeout(()=>el.classList.remove('show'),3000);}
 
-buildLoginSelect();
+// Login select e auto-login ficam aguardando Firebase carregar
+// O refColabsCom.on('value') chama buildLoginSelect() e depois tenta auto-login
 const saved=sessionStorage.getItem('obdc_user');
-if(saved){const u=TEAM_DIN.find(t=>t.id===saved)||TEAM.find(t=>t.id===saved);if(u){currentUser=u;isAdmin=ADMINS.includes(u.id);showApp();}else{document.getElementById('login-wrap').style.display='flex';}}
-else{document.getElementById('login-wrap').style.display='flex';}
+document.getElementById('login-wrap').style.display='flex';
+// Após Firebase carregar (via refColabsCom.on), tenta auto-login se havia sessão
+const _autoLogin = () => {
+  if(saved){
+    const u=TEAM_DIN.find(t=>t.id===saved);
+    if(u){currentUser=u;isAdmin=ADMINS.includes(u.id);showApp();}
+    else{ sessionStorage.removeItem('obdc_user'); }
+  }
+};
+refColabsCom.once('value', _autoLogin);
 
 /* ===== GERENCIAR COLABORADORES (admin) ===== */
 function colabKeyCom(nome){ return nome.trim().toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,20)||Date.now().toString(); }
