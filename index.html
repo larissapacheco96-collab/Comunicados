@@ -684,8 +684,24 @@ function adicionarColabCom(){
 function removerColabCom(id){
   const m=TEAM_DIN.find(t=>t.id===id);
   if(!m) return;
-  if(!confirm(`Remover "${m.nome}"?\n\nOs comunicados enviados para esta pessoa serão mantidos.`)) return;
-  refColabsCom.child(id).remove().then(()=>toast(`"${m.nome}" removido.`,'ok')).catch(e=>toast('Erro: '+e.message,'err'));
+  if(!confirm(`Remover "${m.nome}"?\n\nEla será removida dos comunicados com ciência pendente automaticamente.`)) return;
+  // 1. Remove da lista de colaboradores
+  refColabsCom.child(id).remove().catch(e=>toast('Erro ao remover: '+e.message,'err'));
+  // 2. Remove dos dests de comunicados onde ainda não deu ciência
+  ref.once('value', snap => {
+    const todos = snap.val()||{};
+    const updates = {};
+    Object.entries(todos).forEach(([cid, c]) => {
+      if(c.dests && c.dests[id] && !(c.ciencias && c.ciencias[id])){
+        updates[`${cid}/dests/${id}`] = null;
+      }
+    });
+    if(Object.keys(updates).length){
+      ref.update(updates).then(()=>toast(`"${m.nome}" removida e pendências limpas.`,'ok')).catch(e=>toast('Erro: '+e.message,'err'));
+    } else {
+      toast(`"${m.nome}" removida.`,'ok');
+    }
+  });
 }
 </script>
 
