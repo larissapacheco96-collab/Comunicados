@@ -206,8 +206,8 @@ input[type=file]{display:none}
 </div>
 
 <div id="modal" style="display:none">
-  <div class="overlay" onclick="closeModal(event)">
-    <div class="modal" id="modal-inner"></div>
+  <div class="overlay" onclick="if(event.target===this)closeModal(null,true)">
+    <div class="modal" id="modal-inner" onclick="event.stopPropagation()"></div>
   </div>
 </div>
 <div id="toast" class="toast"></div>
@@ -291,7 +291,11 @@ TEAM.forEach((m,i)=>{const x=i%BG.length;m.avStyle=`background:${BG[x]};color:${
 
 let comunicados={},currentUser=null,isAdmin=false,selectedTag='',selectedDests=new Set(COLAB.map(c=>c.id)),pendingFiles=[];
 
-ref.on('value',snap=>{comunicados=snap.val()||{};if(currentUser){renderComunicados();if(isAdmin)renderStats();}});
+ref.on('value',snap=>{comunicados=snap.val()||{};if(currentUser){
+  // Só re-renderiza a lista se o modal de edição/criação NÃO estiver aberto
+  const modalAberto = document.getElementById('modal').style.display !== 'none';
+  if(!modalAberto){ renderComunicados(); if(isAdmin)renderStats(); }
+}});
 
 function tagCls(t){return{Urgente:'tag-urgente',Informativo:'tag-informativo','Obrigatório':'tag-obrigatorio',Treinamento:'tag-treinamento',Fiscal:'tag-fiscal'}[t]||'tag-informativo';}
 function fmtD(iso){if(!iso)return'—';return new Date(iso+'T12:00:00').toLocaleDateString('pt-BR');}
